@@ -24,6 +24,15 @@ load_dotenv(BACKEND_DIR / ".env", override=False)
 _DEFAULT_CORS_ORIGINS = "http://localhost:3000"
 
 
+def _env(name: str, default: str = "") -> str:
+    """Read an env var with a UTF-8 BOM and surrounding whitespace stripped.
+
+    Some shells (notably PowerShell piping) prepend a BOM when setting env
+    vars; stripping it here keeps provider selection and credentials robust.
+    """
+    return os.getenv(name, default).replace(chr(0xFEFF), "").strip()
+
+
 def _parse_cors_origins(raw: str) -> List[str]:
     """Parse a comma-separated origins string into a clean, ordered list.
 
@@ -66,21 +75,17 @@ class Settings:
     """
 
     def __init__(self) -> None:
-        self.llm_provider: str = os.getenv("LLM_PROVIDER", "ollama").strip().lower()
-        self.ollama_base_url: str = os.getenv(
-            "OLLAMA_BASE_URL", "http://localhost:11434/v1"
-        ).strip()
-        self.ollama_model: str = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:14b").strip()
-        self.gemini_api_key: str = os.getenv("GEMINI_API_KEY", "").strip()
-        self.gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash").strip()
-        self.groq_api_key: str = os.getenv("GROQ_API_KEY", "").strip()
-        self.groq_model: str = os.getenv(
-            "GROQ_MODEL", "llama-3.3-70b-versatile"
-        ).strip()
-        self.openrouter_api_key: str = os.getenv("OPENROUTER_API_KEY", "").strip()
-        self.openrouter_model: str = os.getenv(
+        self.llm_provider: str = _env("LLM_PROVIDER", "ollama").lower()
+        self.ollama_base_url: str = _env("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+        self.ollama_model: str = _env("OLLAMA_MODEL", "qwen2.5-coder:14b")
+        self.gemini_api_key: str = _env("GEMINI_API_KEY")
+        self.gemini_model: str = _env("GEMINI_MODEL", "gemini-2.0-flash")
+        self.groq_api_key: str = _env("GROQ_API_KEY")
+        self.groq_model: str = _env("GROQ_MODEL", "llama-3.3-70b-versatile")
+        self.openrouter_api_key: str = _env("OPENROUTER_API_KEY")
+        self.openrouter_model: str = _env(
             "OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free"
-        ).strip()
+        )
         self.cors_origins: List[str] = _parse_cors_origins(
             os.getenv("CORS_ORIGINS", _DEFAULT_CORS_ORIGINS)
         )
