@@ -5,6 +5,7 @@
  * Analyze button. Reads everything from the shared analysis store.
  */
 import { useState } from "react";
+import Link from "next/link";
 import { Play, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,11 @@ import { useAnalysis } from "@/lib/store";
 
 function Wordmark() {
   return (
-    <div className="flex items-center gap-3">
+    <Link
+      href="/"
+      className="flex items-center gap-3 rounded-lg transition-opacity hover:opacity-80"
+      aria-label="Pipeline Copilot home"
+    >
       <span
         className="relative inline-block h-7 w-7 shrink-0"
         aria-hidden="true"
@@ -28,7 +33,7 @@ function Wordmark() {
         </span>
         <span className="font-display text-xl text-ink">Pipeline Copilot</span>
       </span>
-    </div>
+    </Link>
   );
 }
 
