@@ -1,0 +1,18 @@
+# Render Blueprint — deploys the FastAPI backend on the free tier.
+# In Render: New + → Blueprint → connect this repo. Then set CORS_ORIGINS to
+# your deployed frontend URL and (optionally) a cloud LLM key.
+services:
+  - type: web
+    name: pipeline-copilot-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: LLM_PROVIDER
+        value: ollama # offline deterministic fallback; or set groq/gemini + a key below
+      - key: CORS_ORIGINS
+        value: https://your-frontend.vercel.app # ← change to your real frontend URL
+      # - key: GROQ_API_KEY
+      #   sync: false   # set in the Render dashboard (never commit keys)

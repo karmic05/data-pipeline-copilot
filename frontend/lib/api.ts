@@ -1,0 +1,136 @@
+/**
+ * API client for the FastAPI backend. All LLM text arrives via streamTask(),
+ * which reads an SSE-formatted fetch stream (`data: {"token": "..."}` events).
+ */
+import type {
+  AnalysisReport,
+  AnalyzeRequest,
+  CostAnalysis,
+  ExplainRequest,
+  HealthResponse,
+  ProviderInfo,
+  SimulateRequest,
+  SimulateResponse,
+} from "./types";
+
+export const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
+async function post<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const detail = await res
+      .json()
+      .then((j) => j.detail ?? JSON.stringify(j))
+      .catch(() => res.statusText);
+    throw new ApiError(String(detail), res.status);
+  }
+  return res.json() as Promise<T>;
+}
+
+async function get<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`);
+  if (!res.ok) throw new ApiError(res.statusText, res.status);
+  return res.json() as Promise<T>;
+}
+
+export function analyze(req: AnalyzeRequest): Promise<AnalysisReport> {
+  return post<AnalysisReport>("/api/analyze", req);
+}
+
+export function simulateImpact(req: SimulateRequest): Promise<SimulateResponse> {
+  return post<SimulateResponse>("/api/simulate/impact", req);
+}
+
+export function estimateCost(req: SimulateRequest): Promise<CostAnalysis> {
+  return post<CostAnalysis>("/api/cost/estimate", req);
+}
+
+export function getHealth(): Promise<HealthResponse> {
+  return get<HealthResponse>("/api/health");
+}
+
+export function getProviders(): Promise<ProviderInfo[]> {
+  return get<ProviderInfo[]>("/api/providers");
+}
+
+export interface StreamHandlers {
+  onToken: (token: string) => void;
+  onDone?: () => void;
+  onError?: (message: string) => void;
+}
+
+/**
+ * Stream an LLM task over SSE. Returns an abort function.
+ * Events: `data: {"token": "..."}`, `data: {"done": true}`,
+ * `data: {"error": "..."}`.
+ */
+export function streamTask(
+  req: ExplainRequest,
+  handlers: StreamHandlers,
+): () => void {
+  const controller = new AbortController();
+
+  (async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/explain`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(req),
+        signal: controller.signal,
+      });
+      if (!res.ok || !res.body) {
+        handlers.onError?.(`Stream failed (${res.status})`);
+        return;
+      }
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split("\n\n");
+        buffer = events.pop() ?? "";
+        for (const event of events) {
+          for (const line of event.split("\n")) {
+            if (!line.startsWith("data:")) continue;
+            const payload = line.slice(5).trim();
+            if (!payload) continue;
+            try {
+              const msg = JSON.parse(payload) as {
+                token?: string;
+                done?: boolean;
+                error?: string;
+              };
+              if (msg.token) handlers.onToken(msg.token);
+              if (msg.error) handlers.onError?.(msg.error);
+              if (msg.done) handlers.onDone?.();
+            } catch {
+              // tolerate non-JSON keepalive lines
+            }
+          }
+        }
+      }
+      handlers.onDone?.();
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") {
+        handlers.onError?.((err as Error).message);
+      }
+    }
+  })();
+
+  return () => controller.abort();
+}
