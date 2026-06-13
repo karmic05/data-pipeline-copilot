@@ -13,8 +13,14 @@ import type {
   SimulateResponse,
 } from "./types";
 
-export const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Strip any UTF-8 BOM (U+FEFF) and surrounding whitespace, which some shells
+// (e.g. PowerShell piping) inject when setting the env var, plus any trailing
+// slash so request paths join cleanly.
+const BOM_RE = new RegExp(String.fromCharCode(0xfeff), "g");
+export const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000")
+  .replace(BOM_RE, "")
+  .trim()
+  .replace(/\/+$/, "");
 
 class ApiError extends Error {
   status: number;

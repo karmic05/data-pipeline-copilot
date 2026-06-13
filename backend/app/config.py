@@ -25,8 +25,16 @@ _DEFAULT_CORS_ORIGINS = "http://localhost:3000"
 
 
 def _parse_cors_origins(raw: str) -> List[str]:
-    """Parse a comma-separated origins string into a clean, ordered list."""
-    origins = [origin.strip() for origin in raw.split(",")]
+    """Parse a comma-separated origins string into a clean, ordered list.
+
+    Robust to a leading UTF-8 BOM and stray surrounding whitespace/quotes,
+    which some shells (notably PowerShell piping) inject when setting env vars.
+    """
+    bom = chr(0xFEFF)
+    origins = [
+        origin.replace(bom, "").strip().strip("\"'")
+        for origin in raw.replace(bom, "").split(",")
+    ]
     cleaned = [origin for origin in origins if origin]
     if not cleaned:
         logger.warning(
