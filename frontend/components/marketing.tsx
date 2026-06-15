@@ -1,10 +1,10 @@
 /**
- * Marketing landing page (/). Server-rendered, built entirely from the shared
- * design tokens (paper/ink/terra/frost/ochre/sage/plum), Fraunces display type,
- * Memphis accents and offset block shadows — so it reads as one continuous
- * design with the analyzer app at /app. The primary CTA routes to /app.
+ * Shared marketing building blocks for the multi-page site (home, /features,
+ * /how-it-works, /why-different). All server-safe (no hooks) and built entirely
+ * from the shared design tokens so every page is visually continuous with the
+ * analyzer at /app. The navigation lives in site-nav.tsx (a client component,
+ * for active-link highlighting).
  */
-import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import {
@@ -12,10 +12,12 @@ import {
   ArrowRight,
   Bug,
   Check,
+  Compass,
   DollarSign,
   FileText,
   FlaskConical,
   Gauge,
+  ListChecks,
   Lock,
   ShieldCheck,
   Workflow,
@@ -23,20 +25,13 @@ import {
   Zap,
 } from "lucide-react";
 import { Squiggle, DotGrid } from "@/components/memphis";
-import { FormatMarquee } from "@/components/format-marquee";
 
-const APP_HREF = "/app";
-const GITHUB_HREF = "https://github.com/karmic05/data-pipeline-copilot";
+export const APP_HREF = "/app";
+export const GITHUB_HREF = "https://github.com/karmic05/data-pipeline-copilot";
 
-export const metadata: Metadata = {
-  title: "Data Pipeline Copilot — know what your pipeline costs, breaks, and how to fix it",
-  description:
-    "Paste a SQL query, dbt model, Airflow DAG or Spark job and get cost, lineage, failure blast-radius, a production-readiness score, generated tests and a PII scan — from 85+ deterministic rules, running 100% locally. Not a chatbot.",
-};
+/* ── Shared primitives ───────────────────────────────────────────────────── */
 
-/* ── Small shared pieces ─────────────────────────────────────────────────── */
-
-function GithubMark({ className = "" }: { className?: string }) {
+export function GithubMark({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
       <path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.21.09 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.49 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.89-.01 3.28 0 .32.22.7.83.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5z" />
@@ -44,7 +39,7 @@ function GithubMark({ className = "" }: { className?: string }) {
   );
 }
 
-function Logo({ className = "" }: { className?: string }) {
+export function Logo({ className = "" }: { className?: string }) {
   return (
     <span className={`relative inline-block h-7 w-7 shrink-0 ${className}`} aria-hidden="true">
       <span className="absolute left-0 top-1 h-4 w-4 rotate-12 rounded-[4px] border-2 border-ink bg-terra" />
@@ -54,12 +49,21 @@ function Logo({ className = "" }: { className?: string }) {
   );
 }
 
+export function Wordmark() {
+  return (
+    <span className="flex flex-col leading-none">
+      <span className="text-[10px] uppercase tracking-widest text-inksoft">data intelligence</span>
+      <span className="font-display text-xl text-ink">Pipeline Copilot</span>
+    </span>
+  );
+}
+
 const CTA_BASE =
   "inline-flex select-none items-center justify-center gap-2 rounded-xl border-2 border-ink font-medium transition active:translate-x-[3px] active:translate-y-[3px] active:shadow-none";
 const CTA_PRIMARY = "bg-terra text-paper2 shadow-block hover:brightness-105";
 const CTA_OUTLINE = "bg-paper2 text-ink shadow-block hover:bg-paper3";
 
-function CtaLink({
+export function CtaLink({
   href,
   variant = "primary",
   size = "lg",
@@ -90,7 +94,7 @@ function CtaLink({
   );
 }
 
-function Eyebrow({ children }: { children: ReactNode }) {
+export function Eyebrow({ children }: { children: ReactNode }) {
   return (
     <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-inksoft">
       <span className="inline-block h-1.5 w-1.5 rounded-full bg-terra" />
@@ -99,39 +103,34 @@ function Eyebrow({ children }: { children: ReactNode }) {
   );
 }
 
-/* ── Navigation ──────────────────────────────────────────────────────────── */
-
-function Nav() {
+/** Consistent top header band for the sub-pages. */
+export function PageHero({
+  eyebrow,
+  title,
+  sub,
+}: {
+  eyebrow: string;
+  title: ReactNode;
+  sub?: string;
+}) {
   return (
-    <header className="sticky top-0 z-50 border-b-2 border-ink bg-paper2/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center gap-4 px-5 py-3">
-        <Link href="/" className="flex items-center gap-3" aria-label="Pipeline Copilot home">
-          <Logo />
-          <span className="flex flex-col leading-none">
-            <span className="text-[10px] uppercase tracking-widest text-inksoft">data intelligence</span>
-            <span className="font-display text-xl text-ink">Pipeline Copilot</span>
-          </span>
-        </Link>
-        <nav className="ml-auto hidden items-center gap-7 text-sm font-medium text-inksoft md:flex">
-          <a href="#features" className="transition-colors hover:text-ink">Features</a>
-          <a href="#how" className="transition-colors hover:text-ink">How it works</a>
-          <a href="#different" className="transition-colors hover:text-ink">Why different</a>
-          <a href={GITHUB_HREF} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 transition-colors hover:text-ink">
-            <GithubMark className="h-4 w-4" /> GitHub
-          </a>
-        </nav>
-        <CtaLink href={APP_HREF} size="md" className="ml-auto md:ml-0">
-          Analyze Pipeline
-          <ArrowRight className="h-4 w-4" />
-        </CtaLink>
+    <section className="relative overflow-hidden border-b-2 border-ink bg-paper2">
+      <div className="pointer-events-none absolute inset-0 memphis-dots opacity-40" aria-hidden="true" />
+      <DotGrid className="pointer-events-none absolute right-8 top-10 hidden text-line/70 lg:block" rows={4} cols={5} aria-hidden="true" />
+      <div className="relative mx-auto max-w-6xl px-5 py-16 lg:py-20">
+        <Eyebrow>{eyebrow}</Eyebrow>
+        <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[1.08] tracking-tight text-ink sm:text-5xl">
+          {title}
+        </h1>
+        {sub ? <p className="mt-5 max-w-2xl text-lg leading-relaxed text-inksoft">{sub}</p> : null}
       </div>
-    </header>
+    </section>
   );
 }
 
-/* ── Hero ────────────────────────────────────────────────────────────────── */
+/* ── Hero (home) ─────────────────────────────────────────────────────────── */
 
-function Hero() {
+export function Hero() {
   return (
     <section className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 memphis-dots opacity-50" aria-hidden="true" />
@@ -140,10 +139,8 @@ function Hero() {
         <div>
           <Eyebrow>Data intelligence · not a chatbot</Eyebrow>
           <h1 className="mt-5 font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
-            Know what your pipeline{" "}
-            <span className="text-terra">costs</span>, what{" "}
-            <span className="text-terra">breaks</span>, and how to{" "}
-            <span className="text-sage">fix it</span> — before it ships.
+            Know what your pipeline <span className="text-terra">costs</span>, what{" "}
+            <span className="text-terra">breaks</span>, and how to <span className="text-sage">fix it</span> — before it ships.
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-inksoft">
             Paste a SQL query, dbt model, Airflow DAG or Spark job. In seconds, Pipeline Copilot runs{" "}
@@ -172,7 +169,6 @@ function Hero() {
   );
 }
 
-/** A static mock of an analysis result — echoes the real app for continuity. */
 function HeroCard() {
   return (
     <div className="relative mx-auto w-full max-w-md rotate-1 rounded-2xl border-2 border-ink bg-paper2 p-6 shadow-block">
@@ -180,15 +176,10 @@ function HeroCard() {
         <span className="text-[10px] font-semibold uppercase tracking-widest text-inksoft">analysis report</span>
         <span className="rounded-full border border-line bg-paper3 px-2 py-0.5 font-mono text-[10px] text-ink">sql · snowflake</span>
       </div>
-
       <div className="mt-5 flex items-center gap-5">
         <svg viewBox="0 0 120 120" className="h-24 w-24 shrink-0" aria-hidden="true">
           <circle cx="60" cy="60" r="52" fill="none" stroke="var(--color-paper3)" strokeWidth="12" />
-          <circle
-            cx="60" cy="60" r="52" fill="none"
-            stroke="var(--color-ochre)" strokeWidth="12" strokeLinecap="round"
-            strokeDasharray="258 327" transform="rotate(-90 60 60)"
-          />
+          <circle cx="60" cy="60" r="52" fill="none" stroke="var(--color-ochre)" strokeWidth="12" strokeLinecap="round" strokeDasharray="258 327" transform="rotate(-90 60 60)" />
           <text x="60" y="68" textAnchor="middle" className="fill-ink font-display" style={{ fontSize: 30 }}>79</text>
         </svg>
         <div>
@@ -201,7 +192,6 @@ function HeroCard() {
           </p>
         </div>
       </div>
-
       <div className="mt-5 space-y-2">
         {[
           { sev: "CRITICAL", tone: "bg-terra text-paper2", title: "Cartesian join", line: "L14" },
@@ -215,7 +205,6 @@ function HeroCard() {
           </div>
         ))}
       </div>
-
       <div className="mt-4 flex items-center gap-2 rounded-xl border-2 border-sage/40 bg-sage/10 px-3 py-2 text-sm text-sage">
         <Check className="h-4 w-4" /> Fix diff ready · 98% projected savings
       </div>
@@ -223,7 +212,44 @@ function HeroCard() {
   );
 }
 
-/* ── Feature grid (the 9 dimensions) ─────────────────────────────────────── */
+/* ── Explore hub (home) — links to the three sub-pages ───────────────────── */
+
+const HUB = [
+  { href: "/features", icon: ListChecks, title: "Features", body: "Nine dimensions of analysis from a single paste — issues, cost, lineage, tests, security." },
+  { href: "/how-it-works", icon: Compass, title: "How it works", body: "Paste your pipeline, let 85+ rules and the cost engine run, copy the fix. Three steps." },
+  { href: "/why-different", icon: Zap, title: "Why it's different", body: "Static, deterministic, multi-framework and local — a different shape than everything else." },
+];
+
+export function ExploreHub() {
+  return (
+    <section className="mx-auto max-w-6xl px-5 py-20 lg:py-24">
+      <div className="max-w-2xl">
+        <Eyebrow>Explore</Eyebrow>
+        <h2 className="mt-4 font-display text-3xl tracking-tight text-ink sm:text-4xl">Everything it does, in three parts.</h2>
+      </div>
+      <div className="mt-10 grid gap-5 md:grid-cols-3">
+        {HUB.map(({ href, icon: Icon, title, body }) => (
+          <Link
+            key={href}
+            href={href}
+            className="group rounded-2xl border-2 border-ink bg-paper2 p-6 shadow-block-sm transition-transform hover:-translate-y-1 hover:shadow-block"
+          >
+            <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border-2 border-ink bg-paper text-terra">
+              <Icon className="h-5 w-5" />
+            </span>
+            <h3 className="mt-4 font-display text-xl text-ink">{title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-inksoft">{body}</p>
+            <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-terra">
+              Explore <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ── Features (the 9 dimensions) ─────────────────────────────────────────── */
 
 const FEATURES = [
   { icon: FileText, title: "Plain-English explanation", body: "Reads your pipeline back to you in plain language — every table, join and transform, with no guesswork." },
@@ -237,24 +263,21 @@ const FEATURES = [
   { icon: ShieldCheck, title: "PII & security scan", body: "Detects PII columns, hardcoded secrets and unmasked data flowing to outputs — before it becomes a compliance incident." },
 ];
 
-function Features() {
+export function Features({ withHeading = true }: { withHeading?: boolean }) {
   return (
-    <section id="features" className="mx-auto max-w-6xl px-5 py-20 lg:py-28">
-      <div className="max-w-2xl">
-        <Eyebrow>Nine kinds of intelligence</Eyebrow>
-        <h2 className="mt-4 font-display text-3xl tracking-tight text-ink sm:text-4xl">
-          One paste. Nine dimensions of analysis.
-        </h2>
-        <p className="mt-4 text-lg leading-relaxed text-inksoft">
-          Datadog meets dbt Cloud meets an AI code reviewer — but structured, deterministic, and yours.
-        </p>
-      </div>
-      <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <section className="mx-auto max-w-6xl px-5 py-16 lg:py-20">
+      {withHeading ? (
+        <div className="max-w-2xl">
+          <Eyebrow>Nine kinds of intelligence</Eyebrow>
+          <h2 className="mt-4 font-display text-3xl tracking-tight text-ink sm:text-4xl">One paste. Nine dimensions of analysis.</h2>
+          <p className="mt-4 text-lg leading-relaxed text-inksoft">
+            Datadog meets dbt Cloud meets an AI code reviewer — but structured, deterministic, and yours.
+          </p>
+        </div>
+      ) : null}
+      <div className={`grid gap-5 sm:grid-cols-2 lg:grid-cols-3 ${withHeading ? "mt-12" : ""}`}>
         {FEATURES.map(({ icon: Icon, title, body }) => (
-          <div
-            key={title}
-            className="group rounded-2xl border-2 border-ink bg-paper2 p-6 shadow-block-sm transition-transform hover:-translate-y-1 hover:shadow-block"
-          >
+          <div key={title} className="group rounded-2xl border-2 border-ink bg-paper2 p-6 shadow-block-sm transition-transform hover:-translate-y-1 hover:shadow-block">
             <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border-2 border-ink bg-paper text-terra">
               <Icon className="h-5 w-5" />
             </span>
@@ -267,9 +290,9 @@ function Features() {
   );
 }
 
-/* ── "Not a chatbot" determinism ─────────────────────────────────────────── */
+/* ── Determinism ("not a chatbot") ───────────────────────────────────────── */
 
-function Determinism() {
+export function Determinism() {
   return (
     <section className="border-y-2 border-ink bg-ink text-paper">
       <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-20 lg:grid-cols-2 lg:py-24">
@@ -278,9 +301,7 @@ function Determinism() {
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-terra" />
             The trust model
           </span>
-          <h2 className="mt-4 font-display text-3xl tracking-tight sm:text-4xl">
-            This is not a chatbot.
-          </h2>
+          <h2 className="mt-4 font-display text-3xl tracking-tight sm:text-4xl">This is not a chatbot.</h2>
           <p className="mt-5 text-lg leading-relaxed text-paper3">
             The findings come from a deterministic 85-rule engine — the same code always gives the same answer. The
             LLM only ever <em>explains</em> a finding in plain English; it never invents one. And it never sees your
@@ -307,7 +328,7 @@ function Determinism() {
   );
 }
 
-/* ── Signature: Impact Simulator ─────────────────────────────────────────── */
+/* ── Impact Simulator ────────────────────────────────────────────────────── */
 
 const IMPACT_BARS = [
   { label: "Latency increase", value: "+2,400%", width: "100%", tone: "bg-terra" },
@@ -316,15 +337,13 @@ const IMPACT_BARS = [
   { label: "Incidents / month", value: "~21", width: "60%", tone: "bg-frost" },
 ];
 
-function ImpactSpotlight() {
+export function ImpactSpotlight() {
   return (
-    <section className="mx-auto max-w-6xl px-5 py-20 lg:py-28">
+    <section className="mx-auto max-w-6xl px-5 py-20 lg:py-24">
       <div className="grid items-center gap-12 lg:grid-cols-2">
         <div>
           <Eyebrow>Signature feature</Eyebrow>
-          <h2 className="mt-4 font-display text-3xl tracking-tight text-ink sm:text-4xl">
-            See the blast radius before it pages you.
-          </h2>
+          <h2 className="mt-4 font-display text-3xl tracking-tight text-ink sm:text-4xl">See the blast radius before it pages you.</h2>
           <p className="mt-5 text-lg leading-relaxed text-inksoft">
             The Production Impact Simulator turns every issue into a real-world forecast. Dial the data volume, the
             run frequency and the warehouse — and watch the latency, the dollars, the failure odds and the on-call
@@ -345,7 +364,6 @@ function ImpactSpotlight() {
             ))}
           </ul>
         </div>
-
         <div className="rounded-2xl border-2 border-ink bg-paper2 p-6 shadow-block">
           <div className="flex items-center gap-2">
             <Zap className="h-4 w-4 text-terra" />
@@ -383,17 +401,17 @@ const STEPS = [
   { n: "03", title: "Ship the fix", body: "Copy the diff, apply it, watch the score climb. Ask the AI to explain any finding in plain English." },
 ];
 
-function How() {
+export function How({ withHeading = true }: { withHeading?: boolean }) {
   return (
-    <section id="how" className="border-y-2 border-ink bg-paper2">
-      <div className="mx-auto max-w-6xl px-5 py-20 lg:py-24">
-        <div className="max-w-2xl">
-          <Eyebrow>How it works</Eyebrow>
-          <h2 className="mt-4 font-display text-3xl tracking-tight text-ink sm:text-4xl">
-            From paste to fix in three steps.
-          </h2>
-        </div>
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
+    <section className="border-y-2 border-ink bg-paper2">
+      <div className="mx-auto max-w-6xl px-5 py-16 lg:py-20">
+        {withHeading ? (
+          <div className="max-w-2xl">
+            <Eyebrow>How it works</Eyebrow>
+            <h2 className="mt-4 font-display text-3xl tracking-tight text-ink sm:text-4xl">From paste to fix in three steps.</h2>
+          </div>
+        ) : null}
+        <div className={`grid gap-6 md:grid-cols-3 ${withHeading ? "mt-12" : ""}`}>
           {STEPS.map((s) => (
             <div key={s.n} className="rounded-2xl border-2 border-ink bg-paper p-6 shadow-block-sm">
               <span className="font-display text-5xl text-terra">{s.n}</span>
@@ -416,20 +434,20 @@ const DIFFERENT = [
   { not: "Not a cloud SaaS", body: "Runs on your machine. No connector, no data egress, no account. Your code never leaves your laptop." },
 ];
 
-function Different() {
+export function Different({ withHeading = true }: { withHeading?: boolean }) {
   return (
-    <section id="different" className="mx-auto max-w-6xl px-5 py-20 lg:py-28">
-      <div className="max-w-2xl">
-        <Eyebrow>Why it&apos;s different</Eyebrow>
-        <h2 className="mt-4 font-display text-3xl tracking-tight text-ink sm:text-4xl">
-          A different shape than everything else.
-        </h2>
-        <p className="mt-4 text-lg leading-relaxed text-inksoft">
-          Most data tooling is a connected SaaS that watches data at runtime. Copilot is a static, code-first,
-          local analyzer that catches the expensive mistakes before deploy.
-        </p>
-      </div>
-      <div className="mt-12 grid gap-5 sm:grid-cols-2">
+    <section className="mx-auto max-w-6xl px-5 py-16 lg:py-20">
+      {withHeading ? (
+        <div className="max-w-2xl">
+          <Eyebrow>Why it&apos;s different</Eyebrow>
+          <h2 className="mt-4 font-display text-3xl tracking-tight text-ink sm:text-4xl">A different shape than everything else.</h2>
+          <p className="mt-4 text-lg leading-relaxed text-inksoft">
+            Most data tooling is a connected SaaS that watches data at runtime. Copilot is a static, code-first,
+            local analyzer that catches the expensive mistakes before deploy.
+          </p>
+        </div>
+      ) : null}
+      <div className={`grid gap-5 sm:grid-cols-2 ${withHeading ? "mt-12" : ""}`}>
         {DIFFERENT.map((d) => (
           <div key={d.not} className="rounded-2xl border-2 border-ink bg-paper2 p-6 shadow-block-sm">
             <h3 className="font-display text-xl text-terra">{d.not}</h3>
@@ -443,16 +461,14 @@ function Different() {
 
 /* ── Privacy band ────────────────────────────────────────────────────────── */
 
-function Privacy() {
+export function Privacy() {
   return (
     <section className="border-y-2 border-ink bg-frost/10">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-5 py-16 text-center">
         <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-ink bg-paper2 text-frost shadow-block-sm">
           <Lock className="h-6 w-6" />
         </span>
-        <h2 className="max-w-2xl font-display text-3xl tracking-tight text-ink sm:text-4xl">
-          Your code never leaves your machine.
-        </h2>
+        <h2 className="max-w-2xl font-display text-3xl tracking-tight text-ink sm:text-4xl">Your code never leaves your machine.</h2>
         <p className="max-w-xl text-lg leading-relaxed text-inksoft">
           The parser, the 85-rule engine and all the cost and impact math run locally. AI explanations are optional —
           point at a local model or a free key, or skip them entirely. Either way, nothing is sent to a third party.
@@ -472,9 +488,9 @@ const STATS = [
   { v: "$0", k: "no account, no card" },
 ];
 
-function Stats() {
+export function Stats() {
   return (
-    <section className="border-b-2 border-ink bg-terra text-paper2">
+    <section className="border-y-2 border-ink bg-terra text-paper2">
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-y-8 px-5 py-14 sm:grid-cols-3 lg:grid-cols-5">
         {STATS.map((s) => (
           <div key={s.k} className="text-center">
@@ -487,9 +503,9 @@ function Stats() {
   );
 }
 
-/* ── Final CTA ───────────────────────────────────────────────────────────── */
+/* ── Final CTA (shared, rendered by the marketing layout) ────────────────── */
 
-function FinalCta() {
+export function FinalCta() {
   return (
     <section className="mx-auto max-w-6xl px-5 py-24 text-center">
       <Squiggle className="mx-auto mb-10 max-w-xs text-terra" />
@@ -513,51 +529,29 @@ function FinalCta() {
   );
 }
 
-/* ── Footer ──────────────────────────────────────────────────────────────── */
+/* ── Footer (shared) ─────────────────────────────────────────────────────── */
 
-function Footer() {
+export function Footer() {
   return (
     <footer className="border-t-2 border-ink bg-paper2">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-5 py-10 sm:flex-row">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           <Logo />
           <div className="leading-tight">
             <p className="font-display text-lg text-ink">Pipeline Copilot</p>
             <p className="text-xs text-inksoft">Deterministic data-pipeline intelligence.</p>
           </div>
-        </div>
+        </Link>
         <nav className="flex flex-wrap items-center gap-6 text-sm font-medium text-inksoft">
+          <Link href="/features" className="transition-colors hover:text-ink">Features</Link>
+          <Link href="/how-it-works" className="transition-colors hover:text-ink">How it works</Link>
+          <Link href="/why-different" className="transition-colors hover:text-ink">Why different</Link>
           <Link href={APP_HREF} className="transition-colors hover:text-ink">Open the analyzer</Link>
-          <a href="#features" className="transition-colors hover:text-ink">Features</a>
-          <a href="#different" className="transition-colors hover:text-ink">Why different</a>
           <a href={GITHUB_HREF} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 transition-colors hover:text-ink">
             <GithubMark className="h-4 w-4" /> GitHub
           </a>
         </nav>
       </div>
     </footer>
-  );
-}
-
-/* ── Page ────────────────────────────────────────────────────────────────── */
-
-export default function LandingPage() {
-  return (
-    <div className="bg-paper text-ink">
-      <Nav />
-      <main>
-        <Hero />
-        <FormatMarquee />
-        <Features />
-        <Determinism />
-        <ImpactSpotlight />
-        <How />
-        <Different />
-        <Privacy />
-        <Stats />
-        <FinalCta />
-      </main>
-      <Footer />
-    </div>
   );
 }
