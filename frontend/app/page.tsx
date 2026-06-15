@@ -23,6 +23,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Squiggle, DotGrid } from "@/components/memphis";
+import { FormatMarquee } from "@/components/format-marquee";
 
 const APP_HREF = "/app";
 const GITHUB_HREF = "https://github.com/karmic05/data-pipeline-copilot";
@@ -219,32 +220,6 @@ function HeroCard() {
         <Check className="h-4 w-4" /> Fix diff ready · 98% projected savings
       </div>
     </div>
-  );
-}
-
-/* ── Formats strip ───────────────────────────────────────────────────────── */
-
-const FORMATS = [
-  "SQL", "Snowflake", "BigQuery", "Redshift", "Airflow", "dbt",
-  "Spark", "Flink", "Kafka", "Prefect", "Dagster", "Great Expectations",
-];
-
-function Formats() {
-  return (
-    <section className="border-y-2 border-ink bg-paper2">
-      <div className="mx-auto max-w-6xl px-5 py-10">
-        <p className="text-center text-xs font-semibold uppercase tracking-widest text-inksoft">
-          Understands your whole stack — auto-detected from the code
-        </p>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          {FORMATS.map((f) => (
-            <span key={f} className="rounded-full border-2 border-ink bg-paper px-4 py-1.5 font-mono text-sm text-ink shadow-block-sm">
-              {f}
-            </span>
-          ))}
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -572,7 +547,7 @@ export default function LandingPage() {
       <Nav />
       <main>
         <Hero />
-        <Formats />
+        <FormatMarquee />
         <Features />
         <Determinism />
         <ImpactSpotlight />

@@ -197,3 +197,25 @@ input[type="range"].copilot-range::-moz-range-track {
     background-position: 250% 0;
   }
 }
+
+/* ── Logo marquee (landing page) ────────────────────────────────────────────
+   Two identical tracks sit side by side and both translate -100% of their own
+   width, so the second slides exactly into the first's place — a seamless,
+   gap-free loop. Pauses on hover; respects reduced-motion. */
+@keyframes marquee {
+  to {
+    transform: translateX(-100%);
+  }
+}
+.marquee-track {
+  animation: marquee 36s linear infinite;
+  will-change: transform;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
