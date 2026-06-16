@@ -35,6 +35,8 @@ export interface IssueImpact {
   failure_probability: number;
 }
 
+export type IssueSource = "rule" | "dynamic";
+
 export interface Issue {
   id: string;
   rule: string;
@@ -46,6 +48,8 @@ export interface Issue {
   fix_suggestion: string | null;
   fix_diff: string | null;
   impact: IssueImpact | null;
+  source: IssueSource;
+  confidence: number | null;
 }
 
 export interface CostProjections {
@@ -193,6 +197,7 @@ export interface AnalyzeRequest {
   row_count?: number;
   daily_runs?: number;
   warehouse?: Warehouse;
+  dynamic?: boolean; // run the advisory LLM dynamic-review pass on top of rules
 }
 
 export type LLMTask = "explain" | "issue" | "optimize" | "cost" | "observability";
@@ -225,6 +230,91 @@ export interface HealthResponse {
   provider: ProviderInfo;
 }
 
+// ── Agent / durable workflow / generator ────────────────────────────────────
+
+export interface GenerateRequest {
+  prompt: string;
+  target_format?: string;
+  dialect?: string | null;
+}
+
+export interface GenerateResponse {
+  code: string;
+  format: string;
+  dialect: string | null;
+  notes: string[];
+}
+
+export type StepStatus =
+  | "pending"
+  | "running"
+  | "success"
+  | "failed"
+  | "skipped";
+
+export interface WorkflowStep {
+  name: string;
+  label: string;
+  status: StepStatus;
+  started_at: string | null;
+  finished_at: string | null;
+  duration_ms: number | null;
+  attempts: number;
+  detail: string;
+}
+
+export interface AgentKPIs {
+  steps_total: number;
+  steps_succeeded: number;
+  steps_failed: number;
+  retries: number;
+  duration_ms: number;
+  fixes_proposed: number;
+  fixes_applied: number;
+  success: boolean;
+  used_llm: boolean;
+}
+
+export interface BusinessKPIs {
+  score_before: number;
+  score_after: number;
+  score_delta: number;
+  issues_before: number;
+  issues_after: number;
+  issues_resolved: number;
+  critical_before: number;
+  critical_after: number;
+  monthly_cost_before: number;
+  monthly_cost_after: number;
+  monthly_savings: number;
+  savings_pct: number;
+  annual_savings: number;
+  projected_incidents_prevented: number;
+}
+
+export interface AgentRun {
+  id: string;
+  created_at: string;
+  status: "completed" | "failed" | "partial";
+  steps: WorkflowStep[];
+  agent_kpis: AgentKPIs;
+  business_kpis: BusinessKPIs;
+  initial_report: AnalysisReport | null;
+  final_report: AnalysisReport | null;
+  fixed_code: string | null;
+  summary: string;
+}
+
+export interface AgentRunRequest {
+  code: string;
+  format?: string;
+  dialect?: string | null;
+  row_count?: number;
+  daily_runs?: number;
+  warehouse?: Warehouse;
+  apply_fixes?: boolean;
+}
+
 export const SEVERITY_ORDER: Record<Severity, number> = {
   CRITICAL: 0,
   WARNING: 1,
@@ -233,6 +323,7 @@ export const SEVERITY_ORDER: Record<Severity, number> = {
 
 export const TAB_IDS = [
   "score",
+  "agent",
   "issues",
   "lineage",
   "cost",

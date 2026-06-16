@@ -13,9 +13,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { SeverityBadge } from "@/components/ui/severity-badge";
+import { Tooltip } from "@/components/ui/tooltip";
 import { CodeBlock } from "@/components/ui/code-block";
 import { StreamText } from "@/components/ui/stream-text";
 import { cn } from "@/lib/utils";
+
+const DYNAMIC_TOOLTIP =
+  "Advisory finding from the dynamic LLM reviewer — complements the deterministic rules, not a guaranteed rule hit.";
 
 type SeverityFilter = "ALL" | Severity;
 
@@ -124,6 +128,20 @@ function IssueCard({ issue, open, onToggle, analysisId, code }: IssueCardProps) 
               <span className="rounded-full bg-paper3 px-2 py-0.5 font-mono text-xs text-inksoft">
                 {issue.rule}
               </span>
+              {issue.source === "dynamic" && (
+                <Tooltip content={DYNAMIC_TOOLTIP}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="rounded-full border border-plum/40 bg-plum/10 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-plum">
+                      AI
+                    </span>
+                    {issue.confidence != null && (
+                      <span className="font-mono text-xs text-inksoft">
+                        {Math.round(issue.confidence * 100)}% conf
+                      </span>
+                    )}
+                  </span>
+                </Tooltip>
+              )}
               {issue.location && (
                 <span className="rounded-full border-2 border-line px-2 py-0.5 font-mono text-xs text-inksoft">
                   L{issue.location.line}
@@ -227,6 +245,11 @@ export default function IssuesTab() {
     return Array.from(set).sort();
   }, [issues]);
 
+  const dynamicCount = useMemo(
+    () => issues.filter((it) => it.source === "dynamic").length,
+    [issues],
+  );
+
   const filtered = useMemo(
     () =>
       issues.filter((it) => {
@@ -300,9 +323,18 @@ export default function IssuesTab() {
           />
         </div>
 
-        <span className="ml-auto text-sm text-inksoft">
-          {filtered.length} {filtered.length === 1 ? "issue" : "issues"}
-        </span>
+        <div className="ml-auto flex items-center gap-2">
+          {dynamicCount > 0 && (
+            <Tooltip content={DYNAMIC_TOOLTIP}>
+              <span className="rounded-full border border-plum/40 bg-plum/10 px-2.5 py-0.5 text-xs font-medium text-plum">
+                {dynamicCount} AI
+              </span>
+            </Tooltip>
+          )}
+          <span className="text-sm text-inksoft">
+            {filtered.length} {filtered.length === 1 ? "issue" : "issues"}
+          </span>
+        </div>
       </div>
 
       {issues.length === 0 ? (

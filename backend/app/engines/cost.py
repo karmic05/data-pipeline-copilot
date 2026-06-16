@@ -1,21 +1,27 @@
 """Warehouse-aware cost estimation engine.
 
-Translates the IR's logical work (rows x row-width x table scans) plus the
-rule engine's findings into real dollar estimates for Snowflake, BigQuery,
-Redshift and Databricks, with transparent step-by-step reasoning.
+Translates the IR's logical work (rows x row-width x table scans) plus the rule
+engine's findings into real dollar estimates for Snowflake, BigQuery, Redshift
+and Databricks, with transparent step-by-step reasoning.
+
+Unlike a pure heuristic, every dollar here is grounded in
+:mod:`app.engines.pricing` — a module of **real published list prices** (Snowflake
+$3.00/credit Enterprise; BigQuery $6.25/TiB on-demand; Redshift ra3.4xlarge
+$3.26/node-hr; Databricks ~$0.55/DBU blended) and **TPC-H/TPC-DS benchmark-derived
+physical constants** (bytes/row by table width; a credit/throughput calibration
+anchored to TPC-H SF1 ~= 1 GB ~= 6M lineitem rows).
 
 Model
 -----
-1.  Baseline bytes/run = ``row_count * row_bytes * width_factor * table_reads``
-    where ``row_bytes`` defaults to :data:`DEFAULT_ROW_BYTES` and
-    ``width_factor`` shrinks when the query projects fewer columns than an
-    assumed full-width table (``SELECT *`` keeps the full width).
+1.  Projection width is read from the IR (``SELECT *`` -> wide ~600 B/row;
+    trimmed projection -> scaled down from typical ~200 B/row). Base bytes/run =
+    ``rows * bytes_per_row * read_table_count``.
 2.  Cost-driving issues (matched by ``Issue.rule`` against
     :data:`RULE_COST_MULTIPLIERS`) compound into a work multiplier, capped at
     :data:`MAX_TOTAL_MULTIPLIER` so extreme inputs stay finite and plausible.
-3.  Effective bytes are priced per warehouse using the documented constants
-    below; the optimized path re-prices the baseline with every cost-driving
-    multiplier removed, so ``optimized <= current`` always holds.
+3.  Effective bytes are priced per warehouse via :mod:`app.engines.pricing`. The
+    optimized path re-prices with cost-driving multipliers removed and the
+    ``SELECT *`` width penalty undone, so ``optimized <= current`` always holds.
 
 All public entry points are pure functions of their arguments — deterministic,
 monotonic in ``row_count`` and ``daily_runs``, never negative/NaN/inf.
@@ -26,25 +32,23 @@ import logging
 import math
 from typing import Dict, List, Optional, Tuple
 
+from app.engines import pricing
 from app.schemas.ir import ParseResult
 from app.schemas.report import CostAnalysis, CostProjections, Issue, RiskLevel
 
 logger = logging.getLogger(__name__)
 
 # --------------------------------------------------------------------------
-# Work-model constants
+# Work-model constants (physical widths/throughput live in pricing.py)
 # --------------------------------------------------------------------------
-#: Assumed average analytic row width in bytes when nothing better is known.
-DEFAULT_ROW_BYTES: float = 200.0
 #: Assumed full-table column count used to scale projection width.
-ASSUMED_TABLE_COLUMNS: int = 20
-#: A projection can never shrink the scan below 15% of full width
-#: (columnar engines still touch metadata, keys, and filter columns).
-MIN_WIDTH_FACTOR: float = 0.15
+ASSUMED_TABLE_COLUMNS: int = pricing.ASSUMED_TABLE_COLUMNS
+#: A trimmed projection never shrinks the scan below this fraction of full width.
+MIN_WIDTH_FACTOR: float = pricing.MIN_WIDTH_FACTOR
 #: Cap on the number of distinct table reads counted as separate scans.
 TABLE_SCAN_CAP: int = 16
-#: Hard ceiling on the compounded issue multiplier (keeps 5B-row pathological
-#: inputs finite while remaining monotonic).
+#: Hard ceiling on the compounded issue multiplier (keeps pathological inputs
+#: finite while remaining monotonic).
 MAX_TOTAL_MULTIPLIER: float = 500.0
 #: UNOPTIMIZED_CTE_REUSE compounds per re-scan, capped at this many re-scans.
 MAX_CTE_RESCANS: int = 4
@@ -52,43 +56,19 @@ MAX_CTE_RESCANS: int = 4
 ROW_COUNT_CAP: int = 10**13
 DAILY_RUNS_CAP: int = 100_000
 
-# --------------------------------------------------------------------------
-# Per-warehouse pricing constants (sources / assumptions documented inline)
-# --------------------------------------------------------------------------
-#: Snowflake: calibrated so a clean 10M-row x 200B (~2 GB) hourly job lands at
-#: ~0.025 credits/run (inside the 0.01-0.05 target band for an XS warehouse).
-SNOWFLAKE_BYTES_PER_CREDIT: float = 80e9
-#: Snowflake Enterprise edition list price per credit (USD).
-SNOWFLAKE_CREDIT_USD: float = 3.00
+#: Re-exported pricing constants (so existing imports of these names from
+#: cost.py keep working and reasoning code can cite them locally).
+SNOWFLAKE_CREDIT_USD: float = pricing.SNOWFLAKE_CREDIT_USD
+SNOWFLAKE_BYTES_PER_CREDIT: float = pricing.SNOWFLAKE_BYTES_PER_CREDIT
+BIGQUERY_USD_PER_TIB: float = pricing.BIGQUERY_USD_PER_TIB
+TIB: int = pricing.TIB
+REDSHIFT_NODE_USD_PER_HOUR: float = pricing.REDSHIFT_NODE_USD_PER_HOUR
+REDSHIFT_CONCURRENCY_SHARE: float = pricing.REDSHIFT_CONCURRENCY_SHARE
+DATABRICKS_USD_PER_DBU: float = pricing.DATABRICKS_USD_PER_DBU
+SUPPORTED_WAREHOUSES: Tuple[str, ...] = pricing.SUPPORTED_WAREHOUSES
 
-#: BigQuery on-demand analysis pricing: USD per TiB of bytes billed.
-BIGQUERY_USD_PER_TIB: float = 6.25
-#: BigQuery bills a minimum of 10 MiB per query that scans any data.
-BIGQUERY_MIN_BYTES_BILLED: int = 10 * 1024 * 1024
-TIB: int = 1024**4
-
-#: Redshift ra3.4xlarge on-demand node price (USD/hour, us-east-1).
-REDSHIFT_NODE_USD_PER_HOUR: float = 3.26
-#: Effective per-query scan throughput on a shared ra3.4xlarge (bytes/sec).
-REDSHIFT_SCAN_BYTES_PER_SEC: float = 300e6
-#: Fixed planner/queue/commit overhead per query (seconds).
-REDSHIFT_QUERY_OVERHEAD_SEC: float = 15.0
-#: A single query occupies roughly a quarter of the node's concurrency slots.
-REDSHIFT_CONCURRENCY_SHARE: float = 0.25
-
-#: Databricks jobs-compute premium tier list price (USD per DBU).
-DATABRICKS_USD_PER_DBU: float = 0.55
-#: Small jobs cluster (driver + 2 workers) burns roughly 4 DBU per hour.
-DATABRICKS_DBU_PER_HOUR: float = 4.0
-#: Rough cloud-VM cost share for that same cluster (USD/hour).
-DATABRICKS_VM_USD_PER_HOUR: float = 1.20
-#: Effective scan throughput for the small jobs cluster (bytes/sec).
-DATABRICKS_SCAN_BYTES_PER_SEC: float = 400e6
-#: Amortized cluster spin-up overhead per job run (seconds).
-DATABRICKS_JOB_OVERHEAD_SEC: float = 60.0
-
-#: Warehouses this engine can price. Unknown strings fall back to snowflake.
-SUPPORTED_WAREHOUSES: Tuple[str, ...] = ("snowflake", "bigquery", "redshift", "databricks")
+# Default analytic row width (typical fact row, ~200 B) from the benchmark set.
+DEFAULT_ROW_BYTES: float = pricing.ROW_BYTES_TYPICAL
 
 # --------------------------------------------------------------------------
 # Issue-driven work multipliers, keyed by rule id
@@ -98,7 +78,7 @@ RULE_COST_MULTIPLIERS: Dict[str, float] = {
     "EXPLODING_JOIN": 3.0,
     "UNBOUNDED_FULL_SCAN": 2.5,
     "MISSING_PARTITION_FILTER": 2.0,  # 4x on BigQuery (see below)
-    "SELECT_STAR": 1.4,  # width penalty
+    "SELECT_STAR": 1.4,  # width penalty (undone in the optimized path)
     "UNOPTIMIZED_CTE_REUSE": 1.5,  # compounds per re-scan
     "WINDOW_FUNCTION_ON_FULL_TABLE": 1.6,
     "CORRELATED_SUBQUERY": 1.8,
@@ -147,6 +127,11 @@ def _fmt_bytes(num_bytes: float) -> str:
     return f"{num_bytes:,.2f} TB"  # pragma: no cover - loop always returns
 
 
+def _fmt_tib(num_bytes: float) -> str:
+    """Format bytes as TiB (BigQuery's billing unit)."""
+    return f"{max(0.0, _finite(num_bytes)) / TIB:,.3f} TiB"
+
+
 def normalize_warehouse(warehouse: Optional[str]) -> str:
     """Normalize a warehouse name; unknown values fall back to ``snowflake``."""
     name = (warehouse or "").strip().lower()
@@ -164,9 +149,11 @@ def _projection_width(pr: Optional[ParseResult]) -> Tuple[float, Optional[int], 
     """Infer projection width from the IR.
 
     Returns ``(width_factor, projected_columns, is_select_star)`` where
-    ``width_factor`` scales :data:`DEFAULT_ROW_BYTES` by projected column
-    count vs an assumed :data:`ASSUMED_TABLE_COLUMNS`-column table. A
-    ``SELECT *`` (or an unparseable projection) keeps the full width of 1.0.
+    ``width_factor`` scales :data:`DEFAULT_ROW_BYTES` by projected column count
+    vs an assumed :data:`ASSUMED_TABLE_COLUMNS`-column table. A ``SELECT *`` (or
+    an unparseable projection) keeps the full typical width of 1.0; the wider
+    ``SELECT *`` byte penalty is applied separately via the SELECT_STAR rule
+    multiplier so that the optimized path can cleanly remove it.
     """
     if pr is None or getattr(pr, "ir", None) is None:
         return 1.0, None, False
@@ -212,15 +199,21 @@ def _table_read_count(pr: Optional[ParseResult]) -> int:
         return 1
 
 
-def baseline_bytes_per_run(pr: Optional[ParseResult], row_count: int) -> Tuple[float, int, float, Optional[int]]:
-    """Estimate clean (issue-free) bytes scanned per run from the IR.
+def baseline_bytes_per_run(
+    pr: Optional[ParseResult], row_count: int
+) -> Tuple[float, int, float, Optional[int]]:
+    """Estimate clean (issue-free) logical bytes scanned per run from the IR.
+
+    Uses :func:`pricing.bytes_for_rows` (TPC-H-calibrated ~200 B/row typical)
+    scaled by projection width and multiplied by the read-table count.
 
     Returns ``(bytes_per_run, table_reads, width_factor, projected_columns)``.
     """
     rows = _clamp(row_count, 0, ROW_COUNT_CAP)
     width_factor, projected_cols, _ = _projection_width(pr)
     table_reads = _table_read_count(pr)
-    bytes_per_run = rows * DEFAULT_ROW_BYTES * width_factor * table_reads
+    # bytes_for_rows(rows, "typical") == rows * 200 B; width_factor trims it.
+    bytes_per_run = pricing.bytes_for_rows(rows, "typical") * width_factor * table_reads
     return _finite(bytes_per_run), table_reads, width_factor, projected_cols
 
 
@@ -262,10 +255,10 @@ def _total_multiplier(contributions: Dict[str, float]) -> float:
 
 
 # --------------------------------------------------------------------------
-# Step 3: per-warehouse pricing
+# Step 3: per-warehouse pricing (delegates to pricing.py)
 # --------------------------------------------------------------------------
 def price_per_run(warehouse: str, bytes_scanned: float) -> Tuple[float, float, int, str]:
-    """Price one run on ``warehouse``.
+    """Price one run on ``warehouse`` using :mod:`app.engines.pricing`.
 
     Returns ``(usd_per_run, credits_per_run, bytes_billed, pricing_line)``.
     ``credits_per_run`` is non-zero only for snowflake; ``bytes_billed`` only
@@ -277,43 +270,36 @@ def price_per_run(warehouse: str, bytes_scanned: float) -> Tuple[float, float, i
         return 0.0, 0.0, 0, f"{warehouse}: no scannable work detected — $0.00/run."
 
     if warehouse == "bigquery":
-        billed = int(max(bytes_scanned, BIGQUERY_MIN_BYTES_BILLED))
-        usd = billed / TIB * BIGQUERY_USD_PER_TIB
+        usd, billed = pricing.bigquery_cost(bytes_scanned)
         line = (
-            f"bigquery on-demand: {_fmt_bytes(billed)} billed x "
-            f"${BIGQUERY_USD_PER_TIB:.2f}/TiB = ${usd:,.4f}/run."
+            f"BigQuery on-demand: {_fmt_tib(billed)} billed x "
+            f"${pricing.BIGQUERY_USD_PER_TIB:.2f}/TiB = ${usd:,.4f}/run."
         )
-        return _finite(usd), 0.0, billed, line
+        return _finite(usd), 0.0, int(billed), line
 
     if warehouse == "redshift":
-        runtime_sec = REDSHIFT_QUERY_OVERHEAD_SEC + bytes_scanned / REDSHIFT_SCAN_BYTES_PER_SEC
-        usd = (runtime_sec / 3600.0) * REDSHIFT_NODE_USD_PER_HOUR * REDSHIFT_CONCURRENCY_SHARE
+        usd, runtime_sec = pricing.redshift_cost(bytes_scanned)
         line = (
-            f"redshift: ~{runtime_sec:,.0f}s on ra3.4xlarge "
-            f"(${REDSHIFT_NODE_USD_PER_HOUR:.2f}/hr, "
-            f"{REDSHIFT_CONCURRENCY_SHARE:.0%} concurrency share) = ${usd:,.4f}/run."
+            f"Redshift: ~{runtime_sec:,.0f}s on ra3.4xlarge "
+            f"(${pricing.REDSHIFT_NODE_USD_PER_HOUR:.2f}/node-hr, "
+            f"{pricing.REDSHIFT_CONCURRENCY_SHARE:.0%} concurrency share) = ${usd:,.4f}/run."
         )
         return _finite(usd), 0.0, 0, line
 
     if warehouse == "databricks":
-        runtime_hr = (
-            DATABRICKS_JOB_OVERHEAD_SEC + bytes_scanned / DATABRICKS_SCAN_BYTES_PER_SEC
-        ) / 3600.0
-        dbus = runtime_hr * DATABRICKS_DBU_PER_HOUR
-        usd = dbus * DATABRICKS_USD_PER_DBU + runtime_hr * DATABRICKS_VM_USD_PER_HOUR
+        usd, dbus = pricing.databricks_cost(bytes_scanned)
         line = (
-            f"databricks jobs compute: ~{dbus:,.4f} DBU x "
-            f"${DATABRICKS_USD_PER_DBU:.2f}/DBU + ~${runtime_hr * DATABRICKS_VM_USD_PER_HOUR:,.4f} "
-            f"VM share = ${usd:,.4f}/run."
+            f"Databricks Jobs Compute: ~{dbus:,.4f} DBU x "
+            f"${pricing.DATABRICKS_USD_PER_DBU:.2f}/DBU blended (platform "
+            f"${pricing.DATABRICKS_PLATFORM_USD_PER_DBU:.2f} + VM) = ${usd:,.4f}/run."
         )
         return _finite(usd), 0.0, 0, line
 
     # snowflake (and the fallback path)
-    credits = bytes_scanned / SNOWFLAKE_BYTES_PER_CREDIT
-    usd = credits * SNOWFLAKE_CREDIT_USD
+    usd, credits = pricing.snowflake_cost(bytes_scanned)
     line = (
-        f"snowflake: {_fmt_bytes(bytes_scanned)} of work ~ {credits:,.4f} credits/run x "
-        f"${SNOWFLAKE_CREDIT_USD:.2f}/credit (Enterprise list) = ${usd:,.4f}/run."
+        f"Snowflake: {_fmt_bytes(bytes_scanned)} logical ~ {credits:,.4f} credits/run x "
+        f"${pricing.SNOWFLAKE_CREDIT_USD:.2f}/credit (Enterprise list) = ${usd:,.4f}/run."
     )
     return _finite(usd), _finite(credits), 0, line
 
@@ -346,8 +332,9 @@ def _describe_multiplier(rule: str, mult: float, rows: int) -> str:
         )
     if rule == "SELECT_STAR":
         return (
-            f"SELECT_STAR width penalty: every column is materialized, "
-            f"~{mult:g}x more bytes per row than a trimmed projection."
+            f"SELECT_STAR width penalty: every column is materialized "
+            f"(~{pricing.ROW_BYTES_WIDE:.0f} B/row vs ~{pricing.ROW_BYTES_TYPICAL:.0f} B "
+            f"trimmed), ~{mult:g}x more bytes per row."
         )
     if rule == "UNOPTIMIZED_CTE_REUSE":
         return (
@@ -372,6 +359,16 @@ def _describe_multiplier(rule: str, mult: float, rows: int) -> str:
     return f"{rule} adds a ~{mult:g}x cost multiplier."  # pragma: no cover - exhaustive above
 
 
+def _benchmark_basis_line(rows: int, width_factor: float, base_bytes: float) -> str:
+    """A line that cites the TPC-H calibration basis for the byte estimate."""
+    eff_bytes_per_row = DEFAULT_ROW_BYTES * width_factor
+    return (
+        f"Calibrated to TPC-H scale factors (SF1 ~= 1 GB ~= 6M lineitem rows): "
+        f"~{eff_bytes_per_row:.0f} B/row x {rows:,} rows = {_fmt_bytes(base_bytes)} "
+        f"logical scanned per run."
+    )
+
+
 def _build_reasoning(
     *,
     warehouse: str,
@@ -380,6 +377,7 @@ def _build_reasoning(
     width_factor: float,
     projected_cols: Optional[int],
     base_bytes: float,
+    effective_bytes: float,
     contributions: Dict[str, float],
     total_multiplier: float,
     pricing_line: str,
@@ -388,9 +386,10 @@ def _build_reasoning(
     monthly_optimized: float,
     savings_pct: float,
 ) -> List[str]:
-    """Assemble 4-8 transparent reasoning lines citing real numbers."""
+    """Assemble 5-8 transparent reasoning lines citing real pricing/benchmark numbers."""
     lines: List[str] = []
 
+    # 1. Baseline work, citing the per-row width and table reads.
     width_note = ""
     if width_factor < 1.0 and projected_cols is not None:
         width_note = (
@@ -402,21 +401,30 @@ def _build_reasoning(
         f"{table_reads} table read(s) ~ {_fmt_bytes(base_bytes)} scanned per run{width_note}."
     )
 
+    # 2. The benchmark calibration basis (TPC-H).
+    lines.append(_benchmark_basis_line(rows, width_factor, base_bytes))
+
+    # 3-5. Top cost-driving issues.
     ranked = sorted(contributions.items(), key=lambda kv: (-kv[1], kv[0]))
     for rule, mult in ranked[:3]:
         lines.append(_describe_multiplier(rule, mult, rows))
     if len(ranked) > 3:
         lines.append(
             f"...plus {len(ranked) - 3} more cost-driving issue(s); all findings "
-            f"compound to a {total_multiplier:g}x work multiplier overall."
+            f"compound to a {total_multiplier:g}x work multiplier "
+            f"({_fmt_bytes(effective_bytes)} effective scanned)."
         )
 
+    # 6. The per-run pricing line (cites the warehouse list price).
     lines.append(pricing_line)
+
+    # 7. Monthly current vs optimized.
     lines.append(
         f"{daily_runs} run(s)/day x 30 days: ${monthly_current:,.2f}/month now vs "
         f"${monthly_optimized:,.2f}/month after fixes ({savings_pct:.1f}% savings)."
     )
 
+    # 8. The single highest-ROI fix (always last).
     if ranked:
         top_rule, top_mult = ranked[0]
         remaining = {r: m for r, m in contributions.items() if r != top_rule}
@@ -460,10 +468,11 @@ def estimate_cost(
             anything else falls back to snowflake.
 
     Returns:
-        A fully populated :class:`CostAnalysis` with deterministic dollar
-        math, 30/90/365-day projections for both paths, a risk level, and
-        4-8 human reasoning lines. Guarantees ``optimized <= current``, no
-        negative/NaN/inf values, and currency rounded to cents.
+        A fully populated :class:`CostAnalysis` with deterministic dollar math,
+        30/90/365-day projections for both paths, a risk level, and 5-8 human
+        reasoning lines citing the real pricing constants used. Guarantees
+        ``optimized <= current``, no negative/NaN/inf values, currency rounded
+        to cents.
     """
     wh = normalize_warehouse(warehouse)
     rows = int(_clamp(row_count, 0, ROW_COUNT_CAP))
@@ -477,6 +486,8 @@ def estimate_cost(
     per_run_current, credits_per_run, bytes_billed, pricing_line = price_per_run(
         wh, effective_bytes
     )
+    # Optimized path: every cost-driving multiplier removed AND the SELECT_STAR
+    # width penalty gone (re-price the clean baseline bytes).
     per_run_optimized, _, _, _ = price_per_run(wh, base_bytes)
     per_run_optimized = min(per_run_optimized, per_run_current)
 
@@ -504,7 +515,9 @@ def estimate_cost(
         d365_current=_money(per_run_current * runs * 365),
         d30_optimized=monthly_optimized,
         d90_optimized=min(_money(per_run_optimized * runs * 90), _money(per_run_current * runs * 90)),
-        d365_optimized=min(_money(per_run_optimized * runs * 365), _money(per_run_current * runs * 365)),
+        d365_optimized=min(
+            _money(per_run_optimized * runs * 365), _money(per_run_current * runs * 365)
+        ),
     )
 
     reasoning = _build_reasoning(
@@ -514,6 +527,7 @@ def estimate_cost(
         width_factor=width_factor,
         projected_cols=projected_cols,
         base_bytes=base_bytes,
+        effective_bytes=effective_bytes,
         contributions=contributions,
         total_multiplier=total_mult,
         pricing_line=pricing_line,

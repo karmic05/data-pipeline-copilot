@@ -21,21 +21,27 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import AsyncIterator, Dict, List, Literal, Optional, Tuple
+import time as _time
+from collections import defaultdict, deque
+from typing import AsyncIterator, Deque, Dict, List, Literal, Optional, Tuple
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
 from app import store
+from app.agent import run_agent
 from app.config import settings
 from app.engines.cost import estimate_cost
+from app.engines.dynamic import dynamic_review
 from app.engines.impact import attach_impacts
-from app.llm.client import get_provider_status, list_providers
+from app.llm.client import LLMUnavailable, get_provider_status, list_providers
 from app.llm.tasks import stream_task
+from app.schemas.agent import AgentRun, AgentRunRequest, GenerateRequest, GenerateResponse
 from app.schemas.ir import ParseError, ParseResult
 from app.schemas.report import (
+    SEVERITY_ORDER,
     AnalysisReport,
     CostAnalysis,
     ImpactResult,
@@ -43,6 +49,7 @@ from app.schemas.report import (
     Warehouse,
 )
 from app.services.analyzer import analyze_full
+from app.services.generator import generate_pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +61,48 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── API security: optional API key + per-IP rate limiting ─────────────────────
+# Rate limiting is always on (sliding 60s window per client IP). When
+# ``settings.api_key`` is set, mutating POST /api/* requests must carry a
+# matching ``X-API-Key`` header. Defaults keep the public demo open; an operator
+# locks it down by setting API_KEY (and optionally RATE_LIMIT_PER_MIN).
+_RATE_BUCKETS: Dict[str, Deque[float]] = defaultdict(deque)
+_RATE_WINDOW_S = 60.0
+
+
+def _client_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+@app.middleware("http")
+async def security_middleware(request: Request, call_next):
+    path = request.url.path
+    if request.method == "POST" and path.startswith("/api/"):
+        if settings.api_key and request.headers.get("x-api-key", "") != settings.api_key:
+            return JSONResponse(
+                {"detail": "Invalid or missing API key (set the X-API-Key header)."},
+                status_code=401,
+            )
+        ip = _client_ip(request)
+        now = _time.monotonic()
+        bucket = _RATE_BUCKETS[ip]
+        while bucket and now - bucket[0] > _RATE_WINDOW_S:
+            bucket.popleft()
+        if len(bucket) >= settings.rate_limit_per_min:
+            return JSONResponse(
+                {"detail": "Rate limit exceeded — slow down and retry shortly."},
+                status_code=429,
+                headers={"Retry-After": "60"},
+            )
+        bucket.append(now)
+        if len(_RATE_BUCKETS) > 10_000:  # guard against unbounded IP accumulation
+            for k in [k for k, v in _RATE_BUCKETS.items() if not v]:
+                _RATE_BUCKETS.pop(k, None)
+    return await call_next(request)
 
 LLMTask = Literal["explain", "issue", "optimize", "cost", "observability"]
 
@@ -75,6 +124,9 @@ class AnalyzeRequest(BaseModel):
     row_count: int = 10_000_000
     daily_runs: int = 24
     warehouse: Warehouse = "snowflake"
+    #: When true (and a provider is available), run the advisory LLM
+    #: dynamic-review pass and merge its findings (source="dynamic").
+    dynamic: bool = False
 
 
 class ExplainRequest(BaseModel):
@@ -281,8 +333,14 @@ def providers() -> List[ProviderInfo]:
 
 
 @app.post("/api/analyze", response_model=AnalysisReport)
-def analyze_endpoint(req: AnalyzeRequest) -> AnalysisReport:
-    """Run the full deterministic analysis and persist it for follow-ups."""
+async def analyze_endpoint(req: AnalyzeRequest) -> AnalysisReport:
+    """Run the full deterministic analysis and persist it for follow-ups.
+
+    When ``req.dynamic`` is set, an advisory LLM "dynamic review" pass runs on
+    top of the deterministic rules and its findings (``source="dynamic"``) are
+    merged in. The deterministic rules remain the source of truth; the dynamic
+    pass only adds and never overrides.
+    """
     try:
         report, pr = analyze_full(
             req.code,
@@ -295,6 +353,21 @@ def analyze_endpoint(req: AnalyzeRequest) -> AnalysisReport:
     except ParseError as exc:
         logger.info("Parse failed: %s", exc.message)
         raise HTTPException(status_code=400, detail=exc.message) from exc
+
+    if req.dynamic:
+        try:
+            extra = await dynamic_review(report, pr)
+            if extra:
+                report.issues.extend(extra)
+                report.issues.sort(
+                    key=lambda i: (
+                        SEVERITY_ORDER.get(i.severity, 9),
+                        i.location.line if i.location else 10**9,
+                    )
+                )
+        except Exception:  # advisory pass must never fail the analysis
+            logger.exception("Dynamic review failed; returning rule findings only")
+
     store.save(report, pr)
     return report
 
@@ -398,3 +471,32 @@ def cost_estimate(req: SimulateRequest) -> CostAnalysis:
         daily_runs=req.daily_runs,
         warehouse=req.warehouse,
     )
+
+
+@app.post("/api/generate", response_model=GenerateResponse)
+async def generate_endpoint(req: GenerateRequest) -> GenerateResponse:
+    """Generate pipeline code from a plain-English description.
+
+    Uses the configured LLM provider; degrades to a deterministic templated
+    skeleton (with a note) when no provider is available.
+    """
+    if not req.prompt or not req.prompt.strip():
+        raise HTTPException(status_code=400, detail="Describe the pipeline to generate.")
+    try:
+        return await generate_pipeline(req)
+    except LLMUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@app.post("/api/agent/run", response_model=AgentRun)
+async def agent_run_endpoint(req: AgentRunRequest) -> AgentRun:
+    """Run the autonomous pipeline-doctor agent over a durable workflow.
+
+    Steps (analyze -> dynamic review -> propose fixes -> apply -> re-analyze ->
+    measure) are each recorded with timing/retries, and the run reports both
+    operational (agent) KPIs and business KPIs (score lift, $ saved, incidents
+    prevented). Never raises — a failed run is returned with ``status="failed"``.
+    """
+    if not req.code or not req.code.strip():
+        raise HTTPException(status_code=400, detail="Provide pipeline code for the agent to analyze.")
+    return await run_agent(req)

@@ -32,6 +32,8 @@ interface AnalysisState {
   provider: ProviderInfo | null;
   params: AnalysisParams;
   setParams: (params: AnalysisParams) => void;
+  dynamic: boolean;
+  setDynamic: (v: boolean) => void;
   activeTab: TabId;
   setActiveTab: (tab: TabId) => void;
   runAnalyze: () => Promise<void>;
@@ -46,6 +48,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [provider, setProvider] = useState<ProviderInfo | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>("score");
+  const [dynamic, setDynamic] = useState(false);
   const [params, setParams] = useState<AnalysisParams>({
     row_count: 10_000_000,
     daily_runs: 24,
@@ -83,6 +86,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         row_count: params.row_count,
         daily_runs: params.daily_runs,
         warehouse: params.warehouse,
+        dynamic,
       });
       setReport(result);
       setActiveTab("score");
@@ -91,7 +95,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     } finally {
       setAnalyzing(false);
     }
-  }, [code, params]);
+  }, [code, params, dynamic]);
 
   const value = useMemo(
     () => ({
@@ -103,11 +107,23 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       provider,
       params,
       setParams,
+      dynamic,
+      setDynamic,
       activeTab,
       setActiveTab,
       runAnalyze,
     }),
-    [code, report, analyzing, error, provider, params, activeTab, runAnalyze],
+    [
+      code,
+      report,
+      analyzing,
+      error,
+      provider,
+      params,
+      dynamic,
+      activeTab,
+      runAnalyze,
+    ],
   );
 
   return (

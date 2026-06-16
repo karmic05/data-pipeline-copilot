@@ -89,6 +89,14 @@ class Settings:
         self.cors_origins: List[str] = _parse_cors_origins(
             os.getenv("CORS_ORIGINS", _DEFAULT_CORS_ORIGINS)
         )
+        # API security (optional). When API_KEY is set, mutating POST /api/*
+        # endpoints require a matching X-API-Key header; rate limiting is always
+        # on (per client IP, per minute).
+        self.api_key: str = _env("API_KEY")
+        try:
+            self.rate_limit_per_min: int = int(_env("RATE_LIMIT_PER_MIN", "120") or "120")
+        except ValueError:
+            self.rate_limit_per_min = 120
 
     def __repr__(self) -> str:  # pragma: no cover - debugging convenience
         return (

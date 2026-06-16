@@ -44,6 +44,11 @@ class Issue(BaseModel):
     fix_suggestion: Optional[str] = None
     fix_diff: Optional[str] = None
     impact: Optional[IssueImpact] = None
+    #: "rule" = deterministic engine (authoritative); "dynamic" = LLM-found
+    #: contextual finding (advisory, complements the rules — never replaces them).
+    source: Literal["rule", "dynamic"] = "rule"
+    #: Model confidence for dynamic findings (0-1); None for deterministic rules.
+    confidence: Optional[float] = None
 
 
 class CostProjections(BaseModel):

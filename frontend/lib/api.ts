@@ -3,10 +3,14 @@
  * which reads an SSE-formatted fetch stream (`data: {"token": "..."}` events).
  */
 import type {
+  AgentRun,
+  AgentRunRequest,
   AnalysisReport,
   AnalyzeRequest,
   CostAnalysis,
   ExplainRequest,
+  GenerateRequest,
+  GenerateResponse,
   HealthResponse,
   ProviderInfo,
   SimulateRequest,
@@ -62,6 +66,16 @@ export function simulateImpact(req: SimulateRequest): Promise<SimulateResponse> 
 
 export function estimateCost(req: SimulateRequest): Promise<CostAnalysis> {
   return post<CostAnalysis>("/api/cost/estimate", req);
+}
+
+export function generatePipeline(
+  req: GenerateRequest,
+): Promise<GenerateResponse> {
+  return post<GenerateResponse>("/api/generate", req);
+}
+
+export function runAgent(req: AgentRunRequest): Promise<AgentRun> {
+  return post<AgentRun>("/api/agent/run", req);
 }
 
 export function getHealth(): Promise<HealthResponse> {

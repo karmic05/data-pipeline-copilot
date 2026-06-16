@@ -10,6 +10,7 @@ import { TAB_IDS, type Severity, type TabId } from "@/lib/types";
 import { ShapeBurst } from "@/components/memphis";
 import { cn } from "@/lib/utils";
 import ScoreTab from "@/components/tabs/score-tab";
+import AgentTab from "@/components/tabs/agent-tab";
 import IssuesTab from "@/components/tabs/issues-tab";
 import LineageTab from "@/components/tabs/lineage-tab";
 import CostTab from "@/components/tabs/cost-tab";
@@ -19,6 +20,7 @@ import SecurityTab from "@/components/tabs/security-tab";
 
 const TAB_LABELS: Record<TabId, string> = {
   score: "Score",
+  agent: "Agent",
   issues: "Issues",
   lineage: "Lineage",
   cost: "Cost",
@@ -29,6 +31,7 @@ const TAB_LABELS: Record<TabId, string> = {
 
 const TAB_COMPONENTS: Record<TabId, () => React.ReactNode> = {
   score: ScoreTab,
+  agent: AgentTab,
   issues: IssuesTab,
   lineage: LineageTab,
   cost: CostTab,
@@ -163,6 +166,9 @@ export default function AnalysisPanel() {
   const securityHigh = report?.security.risk_level === "HIGH";
 
   const ActiveTab = TAB_COMPONENTS[activeTab];
+  // The Agent tab runs its own analysis, so it is self-contained and must
+  // render regardless of the global report / loading / error state.
+  const isAgent = activeTab === "agent";
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -205,10 +211,16 @@ export default function AnalysisPanel() {
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto p-5">
-        {!report && !analyzing && !error && <EmptyState />}
-        {analyzing && <LoadingState />}
-        {!analyzing && error && <ErrorState message={error} />}
-        {!analyzing && !error && report && <ActiveTab />}
+        {isAgent ? (
+          <ActiveTab />
+        ) : (
+          <>
+            {!report && !analyzing && !error && <EmptyState />}
+            {analyzing && <LoadingState />}
+            {!analyzing && error && <ErrorState message={error} />}
+            {!analyzing && !error && report && <ActiveTab />}
+          </>
+        )}
       </div>
     </div>
   );

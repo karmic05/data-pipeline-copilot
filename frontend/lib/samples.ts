@@ -233,6 +233,123 @@ GROUP BY
 ORDER BY window_start;                      -- ORDER BY on an unbounded stream
 `,
   },
+  {
+    id: "tpch-revenue",
+    label: "TPC-H — top-revenue customers (intentionally bad)",
+    format: "sql",
+    language: "sql",
+    code: `-- TPC-H benchmark: top-revenue customers report.
+-- Tables: orders, lineitem, customer, supplier, nation, region.
+CREATE OR REPLACE TABLE analytics.tpch_top_customers AS
+SELECT
+    c.*,                                    -- SELECT * ships every customer column
+    n.n_name AS nation,
+    r.r_name AS region,
+    SUM(l.l_extendedprice * (1 - l.l_discount)) AS revenue,
+    (
+        SELECT COUNT(*)                     -- correlated scalar subquery in projection
+        FROM tpch.orders o2
+        WHERE o2.o_custkey = c.c_custkey
+    ) AS lifetime_orders
+FROM tpch.customer c,
+     tpch.orders   o,                       -- comma cross join, no ON: cartesian product
+     tpch.lineitem l,                        -- no date filter on lineitem (full scan)
+     tpch.nation   n,
+     tpch.region   r
+WHERE o.o_custkey = c.c_custkey
+  AND l.l_orderkey = o.o_orderkey
+  AND c.c_nationkey = n.n_nationkey
+  AND n.n_regionkey = r.r_regionkey
+  AND c.c_mktsegment NOT IN (               -- NOT IN over a nullable subquery
+        SELECT s.s_comment FROM tpch.supplier s
+  )
+  AND r.r_name LIKE '%AMERICA%'             -- leading-wildcard LIKE, full scan
+GROUP BY c.c_custkey, c.c_name, c.c_acctbal, c.c_mktsegment, n.n_name, r.r_name
+ORDER BY revenue DESC;
+`,
+  },
+  {
+    id: "nyc-taxi-metrics",
+    label: "NYC TLC trip records — daily taxi metrics (intentionally bad)",
+    format: "sql",
+    language: "sql",
+    code: `-- NYC TLC yellow_tripdata (open data): daily trip metrics.
+-- Real columns: vendor_id, tpep_pickup_datetime, passenger_count,
+-- trip_distance, fare_amount, tip_amount, total_amount, payment_type,
+-- pulocationid, dolocationid.
+CREATE OR REPLACE TABLE analytics.nyc_taxi_daily_metrics AS
+SELECT
+    *,                                              -- SELECT * on a huge full-table scan
+    AVG(fare_amount)   AS avg_fare,
+    AVG(tip_amount)    AS avg_tip,
+    SUM(total_amount)  AS gross_revenue,
+    COUNT(*)           AS trips
+FROM nyc.yellow_tripdata
+-- function-wrapped filter column defeats partition pruning + zone maps:
+WHERE DATE(tpep_pickup_datetime) = '2024-03-15'    -- hardcoded date, function on column
+  AND passenger_count > 0
+  AND trip_distance   > 0
+  AND payment_type    IN (1, 2)
+GROUP BY vendor_id, pulocationid, dolocationid, payment_type
+ORDER BY gross_revenue DESC;
+`,
+  },
+  {
+    id: "github-archive",
+    label: "GH Archive — daily repo-activity rollup, BigQuery (intentionally bad)",
+    format: "sql",
+    language: "sql",
+    code: `-- GH Archive (githubarchive public dataset, BigQuery): repo-activity rollup.
+-- Real event schema: type, actor, repo, payload, created_at.
+-- ANTI-PATTERN: scans EVERY daily shard of the events_* wildcard table because
+-- it never filters on _TABLE_SUFFIX (nor created_at) -> terabytes per run.
+CREATE OR REPLACE TABLE \`myproj.analytics.repo_activity_daily\` AS
+SELECT
+    *,                                              -- SELECT * on a huge wildcard table
+    repo.name              AS repo_name,
+    actor.login            AS actor_login,
+    COUNT(*)               AS events,
+    COUNTIF(type = 'PushEvent')         AS pushes,
+    COUNTIF(type = 'PullRequestEvent')  AS pull_requests,
+    COUNTIF(type = 'WatchEvent')        AS stars
+FROM \`githubarchive.day.events_*\`
+-- No _TABLE_SUFFIX filter and no created_at predicate -> every shard scanned.
+WHERE type IN ('PushEvent', 'PullRequestEvent', 'WatchEvent', 'IssuesEvent')
+  AND repo.name LIKE '%kubernetes%'                 -- leading-wildcard LIKE, full scan
+GROUP BY repo.name, actor.login, type
+ORDER BY events DESC;
+`,
+  },
+  {
+    id: "imdb-top-titles",
+    label: "IMDb datasets — top-rated titles join (intentionally bad)",
+    format: "sql",
+    language: "sql",
+    code: `-- IMDb non-commercial datasets (open): top-rated titles join.
+-- title_basics(tconst, primarytitle, startyear, genres)
+-- title_ratings(tconst, averagerating, numvotes)
+CREATE OR REPLACE TABLE analytics.imdb_top_titles AS
+SELECT
+    b.*,                                        -- SELECT * ships every title column
+    r.averagerating,
+    r.numvotes,
+    (
+        SELECT COUNT(*)                         -- correlated scalar subquery in projection
+        FROM imdb.title_basics b2
+        WHERE b2.startyear = b.startyear
+    ) AS titles_in_year
+FROM imdb.title_basics  b
+JOIN imdb.title_ratings r
+  ON r.tconst = b.tconst
+WHERE r.numvotes > 10000
+  AND r.averagerating >= 8.0
+  AND b.primarytitle LIKE '%Star%'              -- leading-wildcard LIKE on primarytitle
+  AND b.tconst NOT IN (                         -- NOT IN over a nullable subquery
+        SELECT a.tconst FROM imdb.title_akas a
+  )
+ORDER BY r.averagerating DESC, r.numvotes DESC;
+`,
+  },
 ];
 
 export const DEFAULT_SAMPLE: Sample = samples[0];
