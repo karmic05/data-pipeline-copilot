@@ -198,6 +198,7 @@ export interface AnalyzeRequest {
   daily_runs?: number;
   warehouse?: Warehouse;
   dynamic?: boolean; // run the advisory LLM dynamic-review pass on top of rules
+  connection?: ConnectorConfig | null; // ground analysis in a live DB connection
 }
 
 export type LLMTask = "explain" | "issue" | "optimize" | "cost" | "observability";

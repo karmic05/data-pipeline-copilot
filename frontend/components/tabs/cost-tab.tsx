@@ -15,7 +15,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { DollarSign, ArrowRight } from "lucide-react";
+import { DollarSign, ArrowRight, Database } from "lucide-react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAnalysis } from "@/lib/store";
@@ -104,6 +104,13 @@ export default function CostTab() {
   const { projections } = cost;
   const highRisk = cost.risk_level === "HIGH";
 
+  // Live-grounding notes surfaced when the analysis was run against a real DB
+  // connection (real schemas + profiled / BigQuery-dry-run cost).
+  const liveNotes = report.parser_warnings
+    .filter((w) => w.startsWith("[live]"))
+    .map((w) => w.replace(/^\[live\]\s*/, ""));
+  const grounded = liveNotes.length > 0;
+
   const chartData = [
     {
       name: "30 days",
@@ -182,6 +189,20 @@ export default function CostTab() {
 
       <ProviderChips cost={cost} />
 
+      {grounded && (
+        <div className="flex flex-wrap items-start gap-3 rounded-2xl border-2 border-frost/50 bg-frost/10 p-4 shadow-block-sm">
+          <span className="flex shrink-0 items-center gap-2 font-display text-lg text-frost">
+            <Database aria-hidden="true" className="h-4 w-4" />
+            Grounded in live data
+          </span>
+          <ul className="min-w-0 flex-1 space-y-1 text-sm leading-relaxed text-ink">
+            {liveNotes.map((n, i) => (
+              <li key={i}>{n}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Chart */}
       <Card>
         <CardContent className="py-5">
@@ -259,10 +280,20 @@ export default function CostTab() {
             <ol className="mt-4 space-y-3">
               {cost.reasoning.map((line, i) => (
                 <li key={i} className="flex gap-3 leading-relaxed">
-                  <span className="font-display text-2xl leading-none text-terra">
+                  <span
+                    className={`font-display text-2xl leading-none ${
+                      line.startsWith("Live ") ? "text-frost" : "text-terra"
+                    }`}
+                  >
                     {i + 1}.
                   </span>
-                  <span className="pt-0.5 text-ink">{line}</span>
+                  <span
+                    className={`pt-0.5 ${
+                      line.startsWith("Live ") ? "font-medium text-frost" : "text-ink"
+                    }`}
+                  >
+                    {line}
+                  </span>
                 </li>
               ))}
             </ol>

@@ -19,6 +19,7 @@ import {
   ArrowRight,
   ShieldCheck,
   TrendingUp,
+  Database,
 } from "lucide-react";
 import { useAnalysis } from "@/lib/store";
 import { runAgent } from "@/lib/api";
@@ -435,7 +436,7 @@ function AgentKpis({ run }: { run: AgentRun }) {
 // ── Main tab ─────────────────────────────────────────────────────────────────
 
 export default function AgentTab() {
-  const { code, params } = useAnalysis();
+  const { code, params, connection } = useAnalysis();
   const [run, setRun] = useState<AgentRun | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -454,6 +455,7 @@ export default function AgentTab() {
         daily_runs: params.daily_runs,
         warehouse: params.warehouse,
         apply_fixes: true,
+        connection: connection ?? undefined,
       });
       setRun(result);
     } catch (err) {
@@ -493,6 +495,12 @@ export default function AgentTab() {
           <h2 className="max-w-xl font-display text-3xl leading-tight text-ink">
             Run the pipeline-doctor agent.
           </h2>
+          {connection && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-frost/40 bg-frost/10 px-3 py-0.5 font-mono text-xs text-frost">
+              <Database aria-hidden="true" className="h-3 w-3" />
+              grounding in live {connection.kind}
+            </span>
+          )}
         </div>
         <RunButton
           running={running}

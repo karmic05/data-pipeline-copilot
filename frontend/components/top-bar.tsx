@@ -6,7 +6,7 @@
  */
 import { useState } from "react";
 import Link from "next/link";
-import { Play, X } from "lucide-react";
+import { Database, Play, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -38,7 +38,8 @@ function Wordmark() {
 }
 
 export function TopBar() {
-  const { report, provider, analyzing, error, runAnalyze } = useAnalysis();
+  const { report, provider, analyzing, error, runAnalyze, connection } =
+    useAnalysis();
   const [dismissed, setDismissed] = useState(false);
 
   // Surface every fresh error: reset the local dismissal whenever it changes.
@@ -52,13 +53,25 @@ export function TopBar() {
   }
 
   const dialectSuffix = report?.dialect ? ` · ${report.dialect}` : "";
-  const warnings = report?.parser_warnings ?? [];
+  const allWarnings = report?.parser_warnings ?? [];
+  // Live-grounding notes (prefixed "[live]") are informational, not parser
+  // problems — keep them out of the warning count.
+  const warnings = allWarnings.filter((w) => !w.startsWith("[live]"));
   const showError = error !== null && !dismissed;
 
   return (
     <header className="shrink-0">
       <div className="flex items-center gap-4 border-b-2 border-ink bg-paper2 px-5 py-3">
         <Wordmark />
+
+        {connection ? (
+          <Tooltip content="Analyses are grounded in this live database (real schemas + profiled cost). Manage it in the Connect tab.">
+            <span className="chip inline-flex items-center gap-1.5 rounded-full border border-frost/50 bg-frost/10 px-3 font-mono text-xs text-frost">
+              <Database aria-hidden="true" className="h-3 w-3" />
+              live · {connection.kind}
+            </span>
+          </Tooltip>
+        ) : null}
 
         {report ? (
           <span className="flex items-center gap-2">

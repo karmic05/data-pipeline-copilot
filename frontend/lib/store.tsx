@@ -19,6 +19,7 @@ import { DEFAULT_SAMPLE } from "./samples";
 import type {
   AnalysisParams,
   AnalysisReport,
+  ConnectorConfig,
   ProviderInfo,
   TabId,
 } from "./types";
@@ -34,6 +35,9 @@ interface AnalysisState {
   setParams: (params: AnalysisParams) => void;
   dynamic: boolean;
   setDynamic: (v: boolean) => void;
+  /** Active live DB connection — when set, analyses are grounded in it. */
+  connection: ConnectorConfig | null;
+  setConnection: (c: ConnectorConfig | null) => void;
   activeTab: TabId;
   setActiveTab: (tab: TabId) => void;
   runAnalyze: () => Promise<void>;
@@ -49,6 +53,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   const [provider, setProvider] = useState<ProviderInfo | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>("score");
   const [dynamic, setDynamic] = useState(false);
+  const [connection, setConnection] = useState<ConnectorConfig | null>(null);
   const [params, setParams] = useState<AnalysisParams>({
     row_count: 10_000_000,
     daily_runs: 24,
@@ -87,6 +92,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         daily_runs: params.daily_runs,
         warehouse: params.warehouse,
         dynamic,
+        connection: connection ?? undefined,
       });
       setReport(result);
       setActiveTab("score");
@@ -95,7 +101,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     } finally {
       setAnalyzing(false);
     }
-  }, [code, params, dynamic]);
+  }, [code, params, dynamic, connection]);
 
   const value = useMemo(
     () => ({
@@ -109,6 +115,8 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       setParams,
       dynamic,
       setDynamic,
+      connection,
+      setConnection,
       activeTab,
       setActiveTab,
       runAnalyze,
@@ -121,6 +129,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       provider,
       params,
       dynamic,
+      connection,
       activeTab,
       runAnalyze,
     ],

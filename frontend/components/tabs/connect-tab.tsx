@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { ShapeBurst } from "@/components/memphis";
+import { useAnalysis } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 // ── Connector readiness toning ───────────────────────────────────────────────
@@ -362,6 +363,7 @@ function ConfigForm({
 // ── Main tab ─────────────────────────────────────────────────────────────────
 
 export default function ConnectTab() {
+  const { connection: activeConn, setConnection } = useAnalysis();
   const [connectors, setConnectors] = useState<ConnectorInfo[]>([]);
   const [loadingList, setLoadingList] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
@@ -590,6 +592,44 @@ export default function ConnectTab() {
           </div>
 
           {testResult && <TestPanel result={testResult} />}
+
+          {testResult?.ok && selectedKind && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-frost/40 bg-frost/10 p-4">
+              {activeConn?.kind === selectedKind ? (
+                <>
+                  <span className="flex items-center gap-2 font-display text-lg text-frost">
+                    <Plug aria-hidden="true" className="h-4 w-4" />
+                    Active — Analyze &amp; the Agent are grounded in this
+                    connection.
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setConnection(null)}
+                  >
+                    Stop using
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <span className="text-sm leading-relaxed text-inksoft">
+                    Use this connection so{" "}
+                    <span className="font-medium text-ink">Analyze</span> and the{" "}
+                    <span className="font-medium text-ink">Agent</span> resolve
+                    real schemas and real (profiled) cost.
+                  </span>
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      setConnection(buildConfig(selectedKind, form))
+                    }
+                  >
+                    Use for analysis
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
         </section>
       )}
 
