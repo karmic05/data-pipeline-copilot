@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 #: Prefix prepended to every deterministic fallback narrative.
 OFFLINE_PREFIX = (
-    "[offline analysis — start Ollama or set an API key for live LLM "
+    "[offline analysis - start Ollama or set an API key for live LLM "
     "reasoning]\n\n"
 )
 
@@ -42,7 +42,7 @@ _CATEGORY_IMPACT: Dict[str, str] = {
         "plus on-call pages and manual backfills that eat engineering time."
     ),
     "observability": (
-        "without tests and alerts, bad data reaches stakeholders silently — "
+        "without tests and alerts, bad data reaches stakeholders silently - "
         "you find out from an angry email instead of a failed check."
     ),
     "maintainability": (
@@ -105,7 +105,7 @@ def _resolve_issue(report: AnalysisReport, issue_id: Optional[str]) -> Optional[
 
 def _fallback_explain(report: AnalysisReport, issue: Optional[Issue]) -> str:
     fmt = report.format + (f" ({report.dialect})" if report.dialect else "")
-    lines: List[str] = [f"Pipeline overview — detected format: {fmt}."]
+    lines: List[str] = [f"Pipeline overview - detected format: {fmt}."]
     if report.summary:
         lines.append(report.summary)
 
@@ -150,7 +150,7 @@ def _fallback_issue(report: AnalysisReport, issue: Optional[Issue]) -> str:
         if not report.issues:
             return (
                 "No issues were detected in this pipeline, so there is "
-                "nothing to explain — the rule engine gave it a clean bill "
+                "nothing to explain - the rule engine gave it a clean bill "
                 "of health."
             )
         lines = ["The requested issue could not be found. Top detected issues:"]
@@ -158,7 +158,7 @@ def _fallback_issue(report: AnalysisReport, issue: Optional[Issue]) -> str:
             lines.append(f"- [{item.severity}] {item.title} ({item.rule})")
         return "\n".join(lines)
 
-    lines = [f"{issue.title} — {issue.severity} {issue.category} issue ({issue.rule})."]
+    lines = [f"{issue.title} - {issue.severity} {issue.category} issue ({issue.rule})."]
     if issue.location and issue.location.line:
         lines.append(f"Flagged at line {issue.location.line}.")
     lines.append("")
@@ -189,13 +189,13 @@ def _fallback_optimize(report: AnalysisReport, issue: Optional[Issue]) -> str:
     if not report.issues:
         return (
             "No issues were detected, so there are no optimizations to "
-            "prioritize — this pipeline already looks production-clean."
+            "prioritize - this pipeline already looks production-clean."
         )
     costs = _cost_by_issue(report)
     ranked = sorted(report.issues, key=lambda i: costs.get(i.id, 0.0), reverse=True)
     top = ranked[:3]
 
-    lines = ["Optimization plan — top opportunities ranked by monthly cost impact:"]
+    lines = ["Optimization plan - top opportunities ranked by monthly cost impact:"]
     for rank, item in enumerate(top, start=1):
         cost = costs.get(item.id, 0.0)
         cost_note = (
@@ -204,7 +204,7 @@ def _fallback_optimize(report: AnalysisReport, issue: Optional[Issue]) -> str:
             else f"{item.severity.lower()} {item.category} risk"
         )
         lines.append("")
-        lines.append(f"{rank}. {item.title} ({item.rule}) — {cost_note}.")
+        lines.append(f"{rank}. {item.title} ({item.rule}) - {cost_note}.")
         if item.fix_suggestion:
             lines.append(f"   Fix: {item.fix_suggestion}")
         if item.fix_diff:
@@ -249,7 +249,7 @@ def _fallback_cost(report: AnalysisReport, issue: Optional[Issue]) -> str:
         if best_issue is not None and costs[best_id] > 0:
             lines.append("")
             lines.append(
-                f"Highest-ROI fix: {best_issue.title} ({best_issue.rule}) — "
+                f"Highest-ROI fix: {best_issue.title} ({best_issue.rule}) - "
                 f"worth ~{_usd(costs[best_id])}/month."
             )
             if best_issue.fix_suggestion:
@@ -260,7 +260,7 @@ def _fallback_cost(report: AnalysisReport, issue: Optional[Issue]) -> str:
 def _fallback_observability(report: AnalysisReport, issue: Optional[Issue]) -> str:
     gt = report.generated_tests
     lines = [
-        "Observability assessment — score "
+        "Observability assessment - score "
         f"{report.production_score.observability:.0f}/100."
     ]
     if gt.coverage_gaps:
@@ -271,7 +271,7 @@ def _fallback_observability(report: AnalysisReport, issue: Optional[Issue]) -> s
         lines.append("")
         lines.append(
             "Each gap is a failure mode that would reach stakeholders "
-            "silently — bad data ships without a single check firing."
+            "silently - bad data ships without a single check firing."
         )
     else:
         lines.append("")
@@ -282,7 +282,7 @@ def _fallback_observability(report: AnalysisReport, issue: Optional[Issue]) -> s
         lines.append("")
         lines.append(
             f"A ready-to-apply test suite was generated ({len(gt.tests)} "
-            "tests as dbt schema YAML and a Great Expectations suite) — "
+            "tests as dbt schema YAML and a Great Expectations suite) - "
             f"for example: {sample}. Copy it from the Observability tab to "
             "close the gaps before the next deploy."
         )
@@ -311,7 +311,7 @@ def _build_fallback(task: str, report: AnalysisReport, issue: Optional[Issue]) -
         return builder(report, issue)
     except Exception:  # defensive: a fallback must never crash the stream
         logger.exception("Fallback builder for task %r crashed", task)
-        return report.summary or "Analysis complete — see the report tabs for details."
+        return report.summary or "Analysis complete - see the report tabs for details."
 
 
 async def _stream_text(text: str) -> AsyncIterator[str]:

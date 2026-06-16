@@ -128,7 +128,7 @@ export function ShapeBurst({
 }
 
 /**
- * No-op fragment kept for API completeness — the paper grain lives in globals.css
+ * No-op fragment kept for API completeness - the paper grain lives in globals.css
  * via the body-level `.paper-texture` overlay, so nothing needs to render here.
  */
 export function PaperTexture(): null {

@@ -3,7 +3,7 @@
 Wraps a live Snowflake account as a strictly read-only lens: it introspects
 ``INFORMATION_SCHEMA``, reads recent billing from
 ``SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY``, and profiles queries with
-``EXPLAIN USING JSON`` — it never executes the user's query nor any DML/DDL.
+``EXPLAIN USING JSON`` - it never executes the user's query nor any DML/DDL.
 
 The driver (``snowflake-connector-python``) is *optional*: it is imported lazily
 inside :meth:`_connect`, so this module imports cleanly with no driver installed
@@ -41,7 +41,7 @@ class SnowflakeConnector(Connector):
     requires_credentials = True
 
     def __init__(self, config) -> None:
-        # Do NOT connect here — connection is established lazily on first use.
+        # Do NOT connect here - connection is established lazily on first use.
         self._config = config
 
     # ------------------------------------------------------------ driver/conn
@@ -200,7 +200,7 @@ class SnowflakeConnector(Connector):
         """Read recent executions from ``SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY``.
 
         Returns ``[]`` when the driver is unavailable or the view is not
-        accessible (insufficient grants) — history is best-effort, never fatal.
+        accessible (insufficient grants) - history is best-effort, never fatal.
         """
         try:
             conn = self._connect()

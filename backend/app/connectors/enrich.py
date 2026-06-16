@@ -52,7 +52,7 @@ def ground_report(
 ) -> List[str]:
     """Enrich ``report`` in place using a live connection; return human notes.
 
-    Never raises — grounding is best-effort enrichment on top of the
+    Never raises - grounding is best-effort enrichment on top of the
     deterministic analysis, never a replacement for it.
     """
     notes: List[str] = []

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Security tab — a risk banner toned by the overall risk level, a PII column
+ * Security tab - a risk banner toned by the overall risk level, a PII column
  * table, the engine's narrative findings, and any security-category rule hits.
  */
 import { Shield, ShieldAlert } from "lucide-react";
@@ -18,9 +18,9 @@ import { Meter } from "@/components/ui/progress";
 import type { RiskLevel } from "@/lib/types";
 
 const RISK_HEADLINE: Record<RiskLevel, string> = {
-  HIGH: "High risk — sensitive data flows unprotected",
-  MEDIUM: "Medium risk — PII present",
-  LOW: "Low risk — no obvious exposure",
+  HIGH: "High risk - sensitive data flows unprotected",
+  MEDIUM: "Medium risk - PII present",
+  LOW: "Low risk - no obvious exposure",
 };
 
 function confidenceTone(confidence: number): "terra" | "ochre" | "frost" {

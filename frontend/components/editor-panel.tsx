@@ -168,7 +168,7 @@ export function EditorPanel() {
                 void generate();
               }
             }}
-            placeholder="Describe a pipeline — 'daily Snowflake job joining orders and customers with revenue per region'"
+            placeholder="Describe a pipeline - 'daily Snowflake job joining orders and customers with revenue per region'"
             className="min-w-0 flex-1 rounded-xl border-2 border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-inksoft focus:border-ink focus:outline-none"
           />
           <Button

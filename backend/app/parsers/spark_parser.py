@@ -1,6 +1,6 @@
 """Static AST parser for PySpark batch and Structured Streaming jobs.
 
-``parse_spark`` analyzes Python source with the stdlib :mod:`ast` module only —
+``parse_spark`` analyzes Python source with the stdlib :mod:`ast` module only -
 the job is never imported or executed. It walks DataFrame method chains
 (``spark.read.format(...).load(...)``, ``df.write.mode(...).saveAsTable(...)``,
 joins, aggregations, window specs, repartitions, caches, checkpoints,

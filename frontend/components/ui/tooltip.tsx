@@ -10,7 +10,7 @@ export interface TooltipProps {
 }
 
 /**
- * Pure CSS/React tooltip — no portal, no library. The bubble fades in on
+ * Pure CSS/React tooltip - no portal, no library. The bubble fades in on
  * group-hover/focus after a short delay and sits centered above the trigger.
  */
 export function Tooltip({ content, children, className }: TooltipProps) {

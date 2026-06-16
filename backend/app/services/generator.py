@@ -30,7 +30,7 @@ from app.schemas.agent import GenerateRequest, GenerateResponse
 logger = logging.getLogger(__name__)
 
 OFFLINE_NOTE = (
-    "Generated offline — configure an LLM provider (LLM_PROVIDER + key) for "
+    "Generated offline - configure an LLM provider (LLM_PROVIDER + key) for "
     "higher-quality generation."
 )
 

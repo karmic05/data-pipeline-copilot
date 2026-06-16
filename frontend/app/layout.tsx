@@ -21,7 +21,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Data Pipeline Copilot — pipeline intelligence & cost analysis",
+  title: "Data Pipeline Copilot - pipeline intelligence & cost analysis",
   description:
     "Analyze data pipelines for cost, lineage, reliability and security. Deterministic rules engine with explainable, streaming LLM commentary.",
 };

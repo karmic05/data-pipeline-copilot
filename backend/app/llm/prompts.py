@@ -23,8 +23,8 @@ PROMPT_JSON_CHAR_CAP = 8000
 SYSTEM_PROMPT: str = (
     "You are a senior data platform engineer reviewing the results of an "
     "automated pipeline analysis. You receive ONLY structured analysis JSON "
-    "(detected issues, cost estimates, lineage, scores) — never the raw "
-    "source code — so reason strictly from the fields present in the "
+    "(detected issues, cost estimates, lineage, scores) - never the raw "
+    "source code - so reason strictly from the fields present in the "
     "provided JSON.\n"
     "\n"
     "Hard rules:\n"
@@ -35,7 +35,7 @@ SYSTEM_PROMPT: str = (
     "fix_diff already provided.\n"
     "- Keep each issue discussion under 150 words.\n"
     "- Always frame findings in terms of business impact: money, latency, "
-    "missed SLAs, on-call burden, or compliance risk — not just technical "
+    "missed SLAs, on-call burden, or compliance risk - not just technical "
     "correctness.\n"
     "- Be direct and practical, like a code-review comment from a trusted "
     "staff engineer. If the data does not support a claim, say so instead "
@@ -107,7 +107,7 @@ def _compact_report(report: AnalysisReport, issue: Optional[Issue]) -> Dict[str,
     """Build the compact JSON-serializable context sent to the LLM.
 
     Includes format, dialect, summary, score dimensions, cost numbers with
-    reasoning, up to 15 issues, lineage node names and analysis params —
+    reasoning, up to 15 issues, lineage node names and analysis params -
     never raw source code or the full IR.
     """
     score = report.production_score
@@ -225,7 +225,7 @@ def _serialize_capped(payload: Dict[str, Any], cap: int = PROMPT_JSON_CHAR_CAP) 
         if len(text) <= cap:
             return text
     # Pathological input (e.g. an enormous single string): hard-slice as the
-    # last resort — the model tolerates a truncated trailing field.
+    # last resort - the model tolerates a truncated trailing field.
     logger.warning(
         "Prompt context still %d chars after truncation; hard-slicing to %d",
         len(text),
@@ -264,7 +264,7 @@ def build_task_messages(
     user_content = (
         f"{instruction}\n\n"
         "Pipeline analysis context (structured JSON produced by the "
-        "deterministic analyzer — no source code is available):\n"
+        "deterministic analyzer - no source code is available):\n"
         f"```json\n{context_json}\n```"
     )
     return [

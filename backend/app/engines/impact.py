@@ -1,14 +1,14 @@
 """Issue impact simulation engine.
 
 Translates each detected :class:`~app.schemas.report.Issue` into concrete,
-deterministic business impact numbers — extra latency, extra monthly warehouse
-spend, per-run failure probability and projected PagerDuty incidents — given
+deterministic business impact numbers - extra latency, extra monthly warehouse
+spend, per-run failure probability and projected PagerDuty incidents - given
 the user's workload parameters (``row_count``, ``daily_runs``, ``warehouse``,
 ``base_monthly_cost``).
 
 The heart of the module is :data:`IMPACT_MODELS`: a registry keyed by rule id
 mapping to parameterized model functions. Rules without a bespoke model fall
-back to a severity x category heuristic. All outputs are clamped and finite —
+back to a severity x category heuristic. All outputs are clamped and finite -
 no NaN/inf ever escapes this module.
 """
 from __future__ import annotations
@@ -85,7 +85,7 @@ def _cartesian_join(
 def _exploding_join(
     row_count: int, daily_runs: int, warehouse: str, base_monthly_cost: float
 ) -> ModelOutput:
-    """Fan-out join (many-to-many key skew) — milder than a pure cross join."""
+    """Fan-out join (many-to-many key skew) - milder than a pure cross join."""
     latency = _clamp(row_count / 4_000, 1.0, 60.0)
     cost = _clamp(row_count / 400_000, 1.0, 25.0)
     failure = 0.25 if row_count > 10_000_000 else 0.08
@@ -296,7 +296,7 @@ def _summarize(
         return (
             f"Exposed credentials put this pipeline ({daily_runs}x/day on "
             f"{warehouse}) at breach risk: low per-run probability "
-            f"(~{failure_probability:.1%}) but a very high blast radius — "
+            f"(~{failure_probability:.1%}) but a very high blast radius - "
             f"~${cost_increase:,.0f}/mo in expected exposure and remediation cost "
             f"and ~{incidents:.1f} incidents/month."
         )

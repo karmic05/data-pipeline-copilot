@@ -18,7 +18,7 @@ Transforms the unified :class:`~app.schemas.ir.IR` into a renderable
   dependency type when no column links exist.
 
 The graph never has dangling edge endpoints (missing nodes are synthesized)
-and is never empty when the IR carries any signal — as a last resort a single
+and is never empty when the IR carries any signal - as a last resort a single
 node is synthesized from ``ir.metadata.name``.
 """
 from __future__ import annotations
@@ -225,7 +225,7 @@ def build_lineage(ir: IR) -> LineageGraph:
         edge = edges.get((source, target))
         if edge is None:
             # Column lineage implies data flow even without an explicit
-            # dependency edge — synthesize it so the links are never lost.
+            # dependency edge - synthesize it so the links are never lost.
             ensure_node(source)
             ensure_node(target)
             edge = LineageEdge(

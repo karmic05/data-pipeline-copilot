@@ -6,7 +6,7 @@ Kafka Streams). A job is considered streaming when its parser sets
 shared streaming conventions (WINDOW ``{kind, size_minutes}``, STATE
 ``{has_ttl}``, SOURCE/SINK ``{connector | topic}``, REPARTITION
 ``{target_partitions}``, ORDER_BY/DISTINCT/COLLECT ``{on_stream}``) and are
-always read defensively with ``.get`` — each parser populates them best-effort.
+always read defensively with ``.get`` - each parser populates them best-effort.
 """
 from __future__ import annotations
 
@@ -183,7 +183,7 @@ class NoCheckpointingRule(Rule):
     title = "No checkpointing"
     description = (
         "The streaming job has no checkpoint configuration, so on any restart it "
-        "loses offsets and operator state — causing data loss or full reprocessing."
+        "loses offsets and operator state - causing data loss or full reprocessing."
     )
 
     _FIXES = {
@@ -439,7 +439,7 @@ class CollectToDriverRule(Rule):
     title = "Collect to driver"
     description = (
         "collect()/toPandas()-style operations pull the entire distributed dataset "
-        "into the driver process, which does not scale and can OOM the driver — in "
+        "into the driver process, which does not scale and can OOM the driver - in "
         "batch jobs and, worse, on every streaming trigger."
     )
 

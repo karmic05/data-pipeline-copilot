@@ -112,7 +112,7 @@ def _linear_chains(pr: ParseResult) -> List[List[str]]:
 
     Uses ``triggers`` dependency edges. An edge ``u -> v`` is part of a
     straight chain only when ``u`` has exactly one successor and ``v`` has
-    exactly one predecessor — i.e. nothing between them could already be
+    exactly one predecessor - i.e. nothing between them could already be
     running in parallel.
     """
     succ: Dict[str, set] = defaultdict(set)
@@ -143,7 +143,7 @@ def _linear_chains(pr: ParseResult) -> List[List[str]]:
         cursor = start
         while cursor in nxt:
             cursor = nxt[cursor]
-            if cursor in seen:  # cycle guard — malformed graphs must not hang
+            if cursor in seen:  # cycle guard - malformed graphs must not hang
                 break
             chain.append(cursor)
             seen.add(cursor)
@@ -249,7 +249,7 @@ class NoCatchupSetRule(Rule):
     description = (
         "When catchup is not set, Airflow defaults to catchup=True and will "
         "schedule a run for every interval since start_date the moment the DAG "
-        "is deployed — an accidental, often expensive backfill storm."
+        "is deployed - an accidental, often expensive backfill storm."
     )
 
     def check(self, pr: ParseResult) -> List[Issue]:
@@ -280,7 +280,7 @@ class NoCatchupSetRule(Rule):
                     "missed interval since start_date.",
                     line=_line(dag),
                     fix_suggestion=(
-                        "Set catchup explicitly in the DAG constructor — "
+                        "Set catchup explicitly in the DAG constructor - "
                         "catchup=False for most operational DAGs, or "
                         "catchup=True only when historical backfill is intended."
                     ),
@@ -416,7 +416,7 @@ class NoSlaRule(Rule):
             issues.append(
                 self.issue(
                     f"DAG {_dag_id(dag)!r} has no SLA on the DAG or any of its "
-                    "tasks — late runs will not trigger any alert.",
+                    "tasks - late runs will not trigger any alert.",
                     line=_line(dag),
                     fix_suggestion=(
                         "Add sla=timedelta(...) to default_args (or to the "
@@ -456,7 +456,7 @@ class NoOnFailureCallbackRule(Rule):
             issues.append(
                 self.issue(
                     f"DAG {_dag_id(dag)!r} defines no on_failure_callback on "
-                    "the DAG or any task — failed runs will not notify anyone.",
+                    "the DAG or any task - failed runs will not notify anyone.",
                     line=_line(dag),
                     fix_suggestion=(
                         "Set on_failure_callback in default_args (e.g. a "
@@ -718,7 +718,7 @@ class NoDagrunTimeoutRule(Rule):
                 continue
             issues.append(
                 self.issue(
-                    f"DAG {_dag_id(dag)!r} sets no dagrun_timeout — a hung run "
+                    f"DAG {_dag_id(dag)!r} sets no dagrun_timeout - a hung run "
                     "will never be killed and can silently block subsequent "
                     "runs.",
                     line=_line(dag),
@@ -1033,7 +1033,7 @@ class SingleTaskDagRule(Rule):
     formats = ORCHESTRATORS
     title = "DAG contains a single task"
     description = (
-        "A DAG with one task usually wraps a monolithic script — you lose "
+        "A DAG with one task usually wraps a monolithic script - you lose "
         "per-step retries, observability and partial reruns."
     )
 

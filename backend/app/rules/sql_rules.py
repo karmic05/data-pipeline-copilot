@@ -402,7 +402,7 @@ class CartesianJoinRule(Rule):
     title = "Cartesian join"
     description = (
         "A CROSS JOIN, comma-join, or JOIN without ON/USING produces the "
-        "cartesian product of both sides — row counts multiply and the query "
+        "cartesian product of both sides - row counts multiply and the query "
         "cost grows quadratically."
     )
 
@@ -450,7 +450,7 @@ class CartesianJoinRule(Rule):
                     issues.append(
                         self.issue(
                             f"{kind_label} between {left_disp} and {right_disp} "
-                            "produces a cartesian product — every row on one side "
+                            "produces a cartesian product - every row on one side "
                             "pairs with every row on the other.",
                             line=line,
                             fix_suggestion=(
@@ -544,7 +544,7 @@ class UnboundedFullScanRule(Rule):
             issues.append(
                 self.issue(
                     f"Statement scans {', '.join(names)} with no WHERE clause at "
-                    "all — every run reads the entire table(s).",
+                    "all - every run reads the entire table(s).",
                     line=line,
                     fix_suggestion=(
                         "Add a WHERE predicate (ideally on a partition/date "
@@ -602,7 +602,7 @@ class ImplicitCastInJoinRule(Rule):
                 return self.issue(
                     f"Join condition casts {col_sql} to "
                     f"{_truncate(side.args.get('to').sql() if side.args.get('to') else 'another type', 30)} "
-                    f"before comparing with {_truncate(other.sql(), 40)} — the cast "
+                    f"before comparing with {_truncate(other.sql(), 40)} - the cast "
                     "runs per row and disables join pruning.",
                     line=line,
                     fix_suggestion=(
@@ -628,7 +628,7 @@ class ImplicitCastInJoinRule(Rule):
                     rf"\b{re.escape(col.name)}\b",
                 )
                 return self.issue(
-                    f"Join condition wraps {col.sql()} in {func_name}() — the "
+                    f"Join condition wraps {col.sql()} in {func_name}() - the "
                     "function is evaluated for every candidate row pair.",
                     line=line,
                     fix_suggestion=(
@@ -645,7 +645,7 @@ class ImplicitCastInJoinRule(Rule):
                 line = idx.find(rf"{re.escape(side.name)}\s*=\s*'{re.escape(other.this)}'")
                 return self.issue(
                     f"Join compares column {side.sql()} to string literal "
-                    f"'{other.this}' — a numeric column would be implicitly cast "
+                    f"'{other.this}' - a numeric column would be implicitly cast "
                     "on every row.",
                     line=line,
                     fix_suggestion=(
@@ -682,7 +682,7 @@ class NestedLoopRiskRule(Rule):
     formats = SQL_DBT
     title = "Scalar subquery in SELECT list"
     description = (
-        "A subquery inside the SELECT projection executes once per outer row — "
+        "A subquery inside the SELECT projection executes once per outer row - "
         "an O(n*m) nested loop that should be a single join or window."
     )
 
@@ -706,7 +706,7 @@ class NestedLoopRiskRule(Rule):
                         issues.append(
                             self.issue(
                                 f"Scalar subquery over {inner_tables[0]} in the "
-                                f"SELECT list{label} executes once per outer row — "
+                                f"SELECT list{label} executes once per outer row - "
                                 "a nested loop over the full result set.",
                                 line=line,
                                 fix_suggestion=(
@@ -763,7 +763,7 @@ class DeleteWithoutWhereRule(Rule):
                 )
                 issues.append(
                     self.issue(
-                        f"DELETE FROM {name} has no WHERE clause — every row in "
+                        f"DELETE FROM {name} has no WHERE clause - every row in "
                         f"{name} will be removed on each run.",
                         line=line,
                         fix_suggestion=(
@@ -787,7 +787,7 @@ class UpdateWithoutWhereRule(Rule):
     title = "UPDATE without WHERE"
     description = (
         "An UPDATE statement with no WHERE clause rewrites every row of the "
-        "target table — almost always a destructive mistake."
+        "target table - almost always a destructive mistake."
     )
 
     def check(self, pr: ParseResult) -> List[Issue]:
@@ -820,7 +820,7 @@ class UpdateWithoutWhereRule(Rule):
                 )
                 issues.append(
                     self.issue(
-                        f"UPDATE {name} has no WHERE clause — every row in "
+                        f"UPDATE {name} has no WHERE clause - every row in "
                         f"{name} will be rewritten on each run.",
                         line=line,
                         fix_suggestion="Add a WHERE predicate restricting which rows are updated.",
@@ -872,7 +872,7 @@ class CorrelatedSubqueryRule(Rule):
                 issues.append(
                     self.issue(
                         f"Subquery over {inner_tables[0]} is correlated with the "
-                        f"outer query via {', '.join(sorted(refs))} — it may "
+                        f"outer query via {', '.join(sorted(refs))} - it may "
                         "execute once per outer row.",
                         line=line,
                         fix_suggestion=(
@@ -941,7 +941,7 @@ class OrInWhereRule(Rule):
                     issues.append(
                         self.issue(
                             f"WHERE chains {len(operands)} OR-equalities on "
-                            f"{same_col} — engines plan IN lists far better.",
+                            f"{same_col} - engines plan IN lists far better.",
                             line=line,
                             fix_suggestion=f"Replace with {same_col} IN ({in_list}).",
                             fix_diff=self._in_list_diff(idx, line, same_col, in_list),
@@ -959,7 +959,7 @@ class OrInWhereRule(Rule):
                         self.issue(
                             "WHERE combines predicates on "
                             f"{', '.join(cols) if cols else 'multiple expressions'} "
-                            "with OR — the engine cannot use a single index or "
+                            "with OR - the engine cannot use a single index or "
                             "pruning path.",
                             line=line,
                             fix_suggestion=(
@@ -1021,7 +1021,7 @@ class LeadingWildcardLikeRule(Rule):
     title = "Leading wildcard LIKE"
     description = (
         "LIKE/ILIKE patterns beginning with % or _ cannot be served by an "
-        "index or zone map — the engine scans and pattern-matches every row."
+        "index or zone map - the engine scans and pattern-matches every row."
     )
 
     def check(self, pr: ParseResult) -> List[Issue]:
@@ -1043,7 +1043,7 @@ class LeadingWildcardLikeRule(Rule):
                 )
                 issues.append(
                     self.issue(
-                        f"{column} {op} '{value}' starts with a wildcard — no "
+                        f"{column} {op} '{value}' starts with a wildcard - no "
                         "index or pruning can help, forcing a full scan plus "
                         "per-row pattern matching.",
                         line=line,
@@ -1091,7 +1091,7 @@ class UnoptimizedCteReuseRule(Rule):
                 )
                 issues.append(
                     self.issue(
-                        f"CTE {name} is referenced {refs} times — engines that "
+                        f"CTE {name} is referenced {refs} times - engines that "
                         "inline CTEs will execute its body "
                         f"{refs}x.",
                         line=line,
@@ -1158,7 +1158,7 @@ class MissingPartitionFilterRule(Rule):
                     f"{dialect} query filters on "
                     f"{', '.join(sorted(filtered)) if filtered else 'no columns'} "
                     f"but never on a partition column while reading "
-                    f"{', '.join(names)} — all partitions are scanned and billed.",
+                    f"{', '.join(names)} - all partitions are scanned and billed.",
                     line=line,
                     fix_suggestion=(
                         f"Add a predicate on the partition column (e.g. {column}) "
@@ -1212,7 +1212,7 @@ class ExplodingJoinRule(Rule):
             out.append(
                 self.issue(
                     f"Join to {name} uses a non-equi condition "
-                    f"({_truncate(on.sql(), 60)}) — each left row can match many "
+                    f"({_truncate(on.sql(), 60)}) - each left row can match many "
                     "right rows, multiplying output and forcing a nested-loop or "
                     "range-join plan.",
                     line=line,
@@ -1249,7 +1249,7 @@ class ExplodingJoinRule(Rule):
             out.append(
                 self.issue(
                     f"{display} appears {len(nodes)} times in the FROM/JOIN list "
-                    "with no GROUP BY or DISTINCT afterwards — if the join keys "
+                    "with no GROUP BY or DISTINCT afterwards - if the join keys "
                     "are non-unique the result fans out multiplicatively.",
                     line=line,
                     fix_suggestion=(
@@ -1287,7 +1287,7 @@ class WindowOnFullTableRule(Rule):
                 line = idx.find(r"\bover\s*\(")
                 issues.append(
                     self.issue(
-                        f"{func_sql} OVER (...) has no PARTITION BY — the window "
+                        f"{func_sql} OVER (...) has no PARTITION BY - the window "
                         "spans the whole table, serializing it through a single "
                         "global sort/buffer.",
                         line=line,
@@ -1347,7 +1347,7 @@ class RedundantDistinctRule(Rule):
                     line = idx.find(r"\bdistinct\b")
                     issues.append(
                         self.issue(
-                            f"SELECT DISTINCT is combined with {group_sql} — the "
+                            f"SELECT DISTINCT is combined with {group_sql} - the "
                             "GROUP BY already returns one row per group, so the "
                             "DISTINCT pass is pure overhead.",
                             line=line,
@@ -1361,7 +1361,7 @@ class RedundantDistinctRule(Rule):
                     line = idx.find(r"\bdistinct\b")
                     issues.append(
                         self.issue(
-                            f"DISTINCT inside an {op} subquery is redundant — {op} "
+                            f"DISTINCT inside an {op} subquery is redundant - {op} "
                             "semantics already ignore duplicate matches, so the "
                             "dedup sort is wasted work.",
                             line=line,
@@ -1382,7 +1382,7 @@ class NotInNullRule(Rule):
     title = "NOT IN with nullable subquery"
     description = (
         "If the subquery ever returns a NULL, x NOT IN (subquery) evaluates to "
-        "NULL for every row and the whole filter returns nothing — a silent "
+        "NULL for every row and the whole filter returns nothing - a silent "
         "correctness bug."
     )
 
@@ -1398,7 +1398,7 @@ class NotInNullRule(Rule):
                 inner = query.this if isinstance(query, exp.Subquery) else query
                 self._emit(in_node.this, inner, idx, issues)
             # Some dialects (e.g. snowflake) normalize NOT IN (subquery) into
-            # ``x <> ALL (subquery)`` at parse time — same NULL trap.
+            # ``x <> ALL (subquery)`` at parse time - same NULL trap.
             for neq in stmt.find_all(exp.NEQ):
                 all_ = neq.expression
                 if not isinstance(all_, exp.All):
@@ -1431,7 +1431,7 @@ class NotInNullRule(Rule):
         issues.append(
             self.issue(
                 f"{outer_sql} NOT IN (SELECT {inner_col} FROM {inner_table}) "
-                f"returns zero rows if {inner_col} is ever NULL — NULL "
+                f"returns zero rows if {inner_col} is ever NULL - NULL "
                 "membership comparisons are three-valued.",
                 line=line,
                 fix_suggestion=(
@@ -1551,7 +1551,7 @@ class FunctionOnFilterColumnRule(Rule):
             return self.issue(
                 f"WHERE wraps {col.sql()} in {func_label}(...) before comparing "
                 f"with {_truncate(other.sql() if isinstance(other, exp.Expression) else '?', 40)} "
-                "— the predicate is non-sargable, so no index or partition "
+                "- the predicate is non-sargable, so no index or partition "
                 "pruning applies.",
                 line=line,
                 fix_suggestion=(
@@ -1641,7 +1641,7 @@ class UnionInsteadOfUnionAllRule(Rule):
                 issues.append(
                     self.issue(
                         "UNION deduplicates the combined result with a full "
-                        "sort/hash — if the branches cannot overlap (or duplicates "
+                        "sort/hash - if the branches cannot overlap (or duplicates "
                         "are acceptable) this cost is pure overhead.",
                         line=line,
                         fix_suggestion="Use UNION ALL when duplicate rows are impossible or acceptable.",
@@ -1663,7 +1663,7 @@ class MissingIndexHintRule(Rule):
     description = (
         "On Postgres/Redshift, a selective equality filter on a large joined "
         "table with no index (or sort/dist key) note suggests the scan is "
-        "unindexed — a common silent slowdown."
+        "unindexed - a common silent slowdown."
     )
 
     def check(self, pr: ParseResult) -> List[Issue]:
@@ -1697,7 +1697,7 @@ class MissingIndexHintRule(Rule):
                     self.issue(
                         f"Equality filter on {col.sql()} targets the "
                         f"large-looking joined table {_tname(table)} and the "
-                        "script never mentions an index/sortkey — on "
+                        "script never mentions an index/sortkey - on "
                         f"{dialect} this likely degrades to a sequential scan.",
                         line=line,
                         fix_suggestion=(
@@ -1766,7 +1766,7 @@ class OrderByWithoutLimitRule(Rule):
             )
             issues.append(
                 self.issue(
-                    f"Top-level {order_sql} has no LIMIT — the engine sorts the "
+                    f"Top-level {order_sql} has no LIMIT - the engine sorts the "
                     "entire result set even though inserted/loaded data keeps no "
                     "order.",
                     line=line,
@@ -1810,7 +1810,7 @@ class ImplicitColumnInsertRule(Rule):
                 )
                 issues.append(
                     self.issue(
-                        f"INSERT INTO {name} has no column list — values bind by "
+                        f"INSERT INTO {name} has no column list - values bind by "
                         "position, so any schema change in "
                         f"{name} or the source silently misaligns columns.",
                         line=line,
@@ -1852,7 +1852,7 @@ class CrossDatabaseJoinRule(Rule):
                 issues.append(
                     self.issue(
                         f"Query joins across databases {', '.join(sorted(catalogs))} "
-                        f"({', '.join(names[:4])}) — the engine cannot co-locate "
+                        f"({', '.join(names[:4])}) - the engine cannot co-locate "
                         "the join and may ship a full table between databases.",
                         line=line,
                         fix_suggestion=(
@@ -1897,7 +1897,7 @@ class ScalarUdfInPredicateRule(Rule):
                     issues.append(
                         self.issue(
                             f"WHERE calls {name}({', '.join(cols) if cols else '...'}) "
-                            "— a UDF/unrecognized function evaluated per row that "
+                            "- a UDF/unrecognized function evaluated per row that "
                             "blocks predicate pushdown and pruning.",
                             line=line,
                             fix_suggestion=(
@@ -1945,7 +1945,7 @@ class DuplicateJoinTableRule(Rule):
                         issues.append(
                             self.issue(
                                 f"{_tname(target)} is joined twice with the exact "
-                                f"same condition ({_truncate(on.sql(), 50)}) — the "
+                                f"same condition ({_truncate(on.sql(), 50)}) - the "
                                 "second join repeats identical work.",
                                 line=line,
                                 fix_suggestion=(
@@ -1988,7 +1988,7 @@ class DistinctStarRule(Rule):
                 issues.append(
                     self.issue(
                         f"SELECT DISTINCT * over {', '.join(tables)} hashes every "
-                        "column of every row to deduplicate — if duplicates exist "
+                        "column of every row to deduplicate - if duplicates exist "
                         "they usually come from an upstream join fan-out.",
                         line=line,
                         fix_suggestion=(
@@ -2002,7 +2002,7 @@ class DistinctStarRule(Rule):
 
 @register
 class HavingWithoutAggregateRule(Rule):
-    """HAVING without aggregates filters too late — after aggregation."""
+    """HAVING without aggregates filters too late - after aggregation."""
 
     id = "HAVING_WITHOUT_AGGREGATE"
     severity = "WARNING"
@@ -2027,7 +2027,7 @@ class HavingWithoutAggregateRule(Rule):
                 line = idx.find(r"\bhaving\b")
                 issues.append(
                     self.issue(
-                        f"HAVING {cond} references no aggregate — the filter runs "
+                        f"HAVING {cond} references no aggregate - the filter runs "
                         "after GROUP BY, so every group is computed first and "
                         "then discarded.",
                         line=line,
@@ -2039,7 +2039,7 @@ class HavingWithoutAggregateRule(Rule):
 
 @register
 class NullComparisonRule(Rule):
-    """``= NULL`` / ``!= NULL`` never match — NULL needs IS [NOT] NULL."""
+    """``= NULL`` / ``!= NULL`` never match - NULL needs IS [NOT] NULL."""
 
     id = "NULL_COMPARISON"
     severity = "WARNING"
@@ -2080,7 +2080,7 @@ class NullComparisonRule(Rule):
                 issues.append(
                     self.issue(
                         f"{other_sql} {'=' if is_eq else '!='} NULL never evaluates "
-                        f"to TRUE — use {other_sql} {wanted} instead.",
+                        f"to TRUE - use {other_sql} {wanted} instead.",
                         line=line,
                         fix_suggestion=f"Replace with {other_sql} {wanted}.",
                         fix_diff=fix_diff,
@@ -2134,7 +2134,7 @@ class MissingColumnAliasRule(Rule):
                     )
                     issues.append(
                         self.issue(
-                            f"Projection {snippet} has no AS alias — its output "
+                            f"Projection {snippet} has no AS alias - its output "
                             "name is engine-generated and unstable across "
                             "dialects and versions.",
                             line=line,
@@ -2185,7 +2185,7 @@ class HardcodedDateRule(Rule):
                 issues.append(
                     self.issue(
                         f"Predicate compares {col or 'a column'} to the hardcoded "
-                        f"date '{lit.this}' — the filter silently goes stale.",
+                        f"date '{lit.this}' - the filter silently goes stale.",
                         line=line,
                         fix_suggestion=(
                             "Derive the bound from the run date (CURRENT_DATE "
@@ -2242,7 +2242,7 @@ class InconsistentCaseRule(Rule):
         return [
             self.issue(
                 f"Keywords mix casing: {upper} UPPERCASE (e.g. {upper_example}) "
-                f"vs {lower} lowercase (e.g. {lower_example}) — pick one "
+                f"vs {lower} lowercase (e.g. {lower_example}) - pick one "
                 "convention for the whole script.",
                 line=minority_line,
                 fix_suggestion=(
@@ -2298,7 +2298,7 @@ class GroupByOrdinalRule(Rule):
                 issues.append(
                     self.issue(
                         f"GROUP BY {ord_list} uses positional ordinals (currently "
-                        f"{', '.join(resolved)}) — reordering the SELECT list "
+                        f"{', '.join(resolved)}) - reordering the SELECT list "
                         "silently changes the grouping.",
                         line=line,
                         fix_suggestion=f"Group by explicit expressions: GROUP BY {', '.join(resolved)}.",
@@ -2309,7 +2309,7 @@ class GroupByOrdinalRule(Rule):
 
 @register
 class CaseWithoutElseRule(Rule):
-    """CASE with no ELSE yields NULL for unmatched rows — often unintended."""
+    """CASE with no ELSE yields NULL for unmatched rows - often unintended."""
 
     id = "CASE_WITHOUT_ELSE"
     severity = "INFO"
@@ -2342,7 +2342,7 @@ class CaseWithoutElseRule(Rule):
                 line = idx.find(r"\bcase\b")
                 issues.append(
                     self.issue(
-                        f"CASE expression{label} has no ELSE — rows matching no "
+                        f"CASE expression{label} has no ELSE - rows matching no "
                         "WHEN branch become NULL silently.",
                         line=line,
                         fix_suggestion=(
@@ -2388,7 +2388,7 @@ class UnusedCteRule(Rule):
                 )
                 issues.append(
                     self.issue(
-                        f"CTE {name} is defined but never referenced — dead code "
+                        f"CTE {name} is defined but never referenced - dead code "
                         "that some engines still evaluate.",
                         line=line,
                         fix_suggestion=f"Delete the unused CTE {name}.",
@@ -2408,7 +2408,7 @@ class OrderByInSubqueryRule(Rule):
     title = "ORDER BY in subquery"
     description = (
         "Sorting inside a derived table or CTE without LIMIT is discarded by "
-        "the outer query — the sort cost buys nothing."
+        "the outer query - the sort cost buys nothing."
     )
 
     def check(self, pr: ParseResult) -> List[Issue]:
@@ -2431,7 +2431,7 @@ class OrderByInSubqueryRule(Rule):
                 line = idx.find(r"\border\s+by\b")
                 issues.append(
                     self.issue(
-                        f"{order_sql} inside {where_label} has no LIMIT — the "
+                        f"{order_sql} inside {where_label} has no LIMIT - the "
                         "outer query gives no ordering guarantee, so the sort is "
                         "pure wasted compute.",
                         line=line,
@@ -2479,7 +2479,7 @@ class LikeWithoutWildcardRule(Rule):
                 line = idx.find(rf"i?like\s+'{re.escape(value)}'", r"\bi?like\b")
                 issues.append(
                     self.issue(
-                        f"{column} {op} '{value}' contains no wildcard — it is an "
+                        f"{column} {op} '{value}' contains no wildcard - it is an "
                         "equality test in disguise that may skip index fast paths.",
                         line=line,
                         fix_suggestion=f"Use {column} = '{value}' instead of {op}.",

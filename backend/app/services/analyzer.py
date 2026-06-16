@@ -6,7 +6,7 @@
     -> compute_score -> generate_tests -> scan_security
     -> deterministic summary + optimizations -> AnalysisReport
 
-Everything here is deterministic — the LLM layer is never invoked. Engine
+Everything here is deterministic - the LLM layer is never invoked. Engine
 failures are isolated: a crashing engine logs the exception and degrades to
 that section's schema defaults instead of losing the whole analysis.
 """

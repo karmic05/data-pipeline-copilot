@@ -7,8 +7,8 @@ opaque magic numbers. Every constant below carries a source/derivation comment.
 Pricing snapshot
 ----------------
 All list prices are the publicly published US (us-east-1 / equivalent) on-demand
-list rates as of late 2025 / early 2026. They are list prices — real customers
-negotiate discounts — so treat the dollar outputs as *order-of-magnitude*, not
+list rates as of late 2025 / early 2026. They are list prices - real customers
+negotiate discounts - so treat the dollar outputs as *order-of-magnitude*, not
 invoice-exact. The relative ranking between warehouses is the durable signal.
 
 Benchmark calibration basis
@@ -34,7 +34,7 @@ TPC-DS table population and are what :func:`bytes_for_rows` selects between.
 The Snowflake throughput constant :data:`SNOWFLAKE_BYTES_PER_CREDIT` is
 *calibrated* (not published): it is chosen so that a clean 10M-row x ~200 B
 (~2 GB) hourly job on a small (XS-S) warehouse lands at ~0.025 credits/run, i.e.
-a few cents — inside the 0.01-0.05 credits/run target band. See its comment.
+a few cents - inside the 0.01-0.05 credits/run target band. See its comment.
 """
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ from typing import Dict, Tuple
 # Unit helpers
 # ==========================================================================
 #: 1 tebibyte in bytes. BigQuery on-demand pricing is quoted per **TiB**
-#: (1024^4 bytes), NOT per decimal TB (10^12) — this distinction is ~10% of
+#: (1024^4 bytes), NOT per decimal TB (10^12) - this distinction is ~10% of
 #: the bill, so we use the binary unit deliberately.
 TIB: int = 1024**4
 #: 1 gibibyte in bytes (for human-readable derivations in comments/tests).
@@ -98,7 +98,7 @@ ROW_WIDTHS: Dict[str, float] = {
 #: tables run 20-35 columns; we take a conservative 20).
 ASSUMED_TABLE_COLUMNS: int = 20
 #: A trimmed projection never shrinks the logical scan below this fraction of
-#: full width — columnar engines still touch keys, filter, and join columns.
+#: full width - columnar engines still touch keys, filter, and join columns.
 MIN_WIDTH_FACTOR: float = 0.15
 
 
@@ -110,7 +110,7 @@ def bytes_for_rows(row_count: float, width: str = "typical") -> float:
     ``bytes_for_rows(10_000_000, "typical")`` -> 2.0e9 (~2 GB), matching the
     ~200 B/row anchor.
 
-    The value is the *logical* byte count — this is exactly what BigQuery
+    The value is the *logical* byte count - this is exactly what BigQuery
     on-demand bills on, and the per-engine helpers below derive compressed-scan
     runtime / credits from it.
     """
@@ -120,7 +120,7 @@ def bytes_for_rows(row_count: float, width: str = "typical") -> float:
 
 
 # ==========================================================================
-# Snowflake — credit-based pricing
+# Snowflake - credit-based pricing
 # ==========================================================================
 # Source: Snowflake published list pricing. Enterprise edition lists at
 # **$3.00 / credit** (Standard ~$2.00, Business Critical ~$4.00) on AWS US.
@@ -201,11 +201,11 @@ def snowflake_runtime_seconds(bytes_scanned: float, size: str = "xs") -> float:
 
 
 # ==========================================================================
-# BigQuery — on-demand (bytes-scanned) pricing
+# BigQuery - on-demand (bytes-scanned) pricing
 # ==========================================================================
 # Source: Google BigQuery published on-demand analysis pricing:
 #   **$6.25 per TiB** of bytes *billed* (us multi-region; the first 1 TiB/month
-#   is free — we intentionally IGNORE the free tier so estimates are
+#   is free - we intentionally IGNORE the free tier so estimates are
 #   conservative/worst-case). Storage cost is out of scope (ignored).
 # BigQuery bills the **logical** bytes scanned for the columns touched, with a
 # **10 MB minimum** per query that scans any data, rounded up.
@@ -230,12 +230,12 @@ def bigquery_cost(bytes_billed: float) -> Tuple[float, int]:
 
 
 # ==========================================================================
-# Redshift — provisioned ra3 node-hour pricing
+# Redshift - provisioned ra3 node-hour pricing
 # ==========================================================================
 # Source: Amazon Redshift published on-demand pricing for **ra3.4xlarge** ~=
 # **$3.26 / node / hour** (us-east-1). Node assumption: we price a *single*
 # ra3.4xlarge node-equivalent and attribute only the fraction of node-time the
-# query actually occupies (see REDSHIFT_CONCURRENCY_SHARE) — a provisioned
+# query actually occupies (see REDSHIFT_CONCURRENCY_SHARE) - a provisioned
 # cluster is paid 24/7, but the *marginal* cost a query imposes is its share of
 # node-time, which is the right number for "what does this query cost to run".
 REDSHIFT_NODE_USD_PER_HOUR: float = 3.26  # ra3.4xlarge on-demand, us-east-1
@@ -276,11 +276,11 @@ def redshift_cost(
 
 
 # ==========================================================================
-# Databricks — Jobs Compute (DBU + cloud VM) pricing
+# Databricks - Jobs Compute (DBU + cloud VM) pricing
 # ==========================================================================
 # Source: Databricks published Jobs Compute list pricing ~= **$0.15 / DBU**
 # (Premium tier) for the Databricks platform charge. That is the platform fee
-# ONLY — the customer also pays the underlying cloud VM. A blended *effective*
+# ONLY - the customer also pays the underlying cloud VM. A blended *effective*
 # rate of ~**$0.55 / DBU** (platform + VM) is a widely-cited rule of thumb for
 # Jobs Compute on general-purpose instances; we use it so the dollar figure
 # reflects total cost of ownership, and document the split below.

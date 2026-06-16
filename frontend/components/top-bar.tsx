@@ -55,7 +55,7 @@ export function TopBar() {
   const dialectSuffix = report?.dialect ? ` · ${report.dialect}` : "";
   const allWarnings = report?.parser_warnings ?? [];
   // Live-grounding notes (prefixed "[live]") are informational, not parser
-  // problems — keep them out of the warning count.
+  // problems - keep them out of the warning count.
   const warnings = allWarnings.filter((w) => !w.startsWith("[live]"));
   const showError = error !== null && !dismissed;
 

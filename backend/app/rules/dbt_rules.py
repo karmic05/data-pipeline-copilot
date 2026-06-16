@@ -6,8 +6,8 @@ into ``extras["schema_yml"]``, ``{{ ref() }}`` targets into ``extras["refs"]``,
 ``{{ source() }}`` targets into ``extras["sources"]``, declared tests into
 ``extras["tests"]``, the configured ``unique_key`` into
 ``extras["unique_key"]`` and hardcoded (non-ref/source) table references into
-``extras["raw_table_refs"]``. Every rule reads these defensively — extras may
-be partially populated for malformed input — and falls back to the IR
+``extras["raw_table_refs"]``. Every rule reads these defensively - extras may
+be partially populated for malformed input - and falls back to the IR
 (materialization, metadata, operations) where possible.
 """
 from __future__ import annotations
@@ -351,7 +351,7 @@ class NoTestsOnPrimaryKeyRule(Rule):
         return [
             self.issue(
                 f"Primary key column {key!r} of model {model!r} has no unique "
-                "or not_null test — duplicate or null keys will reach every "
+                "or not_null test - duplicate or null keys will reach every "
                 "downstream join and metric undetected.",
                 fix_suggestion=(
                     f"Add unique and not_null tests for {key!r} under the "
@@ -364,7 +364,7 @@ class NoTestsOnPrimaryKeyRule(Rule):
 
 @register
 class UntestedSourceRule(Rule):
-    """Sources are the trust boundary — they must carry tests."""
+    """Sources are the trust boundary - they must carry tests."""
 
     id = "UNTESTED_SOURCE"
     severity = "CRITICAL"
@@ -403,7 +403,7 @@ class UntestedSourceRule(Rule):
 
 @register
 class EphemeralInProductionRule(Rule):
-    """Ephemeral models are inlined CTEs — undebuggable and recomputed."""
+    """Ephemeral models are inlined CTEs - undebuggable and recomputed."""
 
     id = "EPHEMERAL_IN_PRODUCTION"
     severity = "CRITICAL"
@@ -489,7 +489,7 @@ class MissingDescriptionRule(Rule):
                 "will render an empty page for it.",
                 fix_suggestion=(
                     f"Add a description for {model!r} (and its key columns) in "
-                    "schema.yml — one sentence on grain and purpose is enough."
+                    "schema.yml - one sentence on grain and purpose is enough."
                 ),
             )
         ]
@@ -531,7 +531,7 @@ class MissingIncrementalStrategyRule(Rule):
         return [
             self.issue(
                 f"Incremental model {model!r} does not set "
-                "incremental_strategy, so it relies on the adapter default — "
+                "incremental_strategy, so it relies on the adapter default - "
                 "behaviour (and cost) silently differs between warehouses.",
                 line=_config_line(pr),
                 fix_suggestion=(
@@ -567,7 +567,7 @@ class FullRefreshOnLargeTableRule(Rule):
         return [
             self.issue(
                 f"Model {model!r} is a full-refresh table with no partition or "
-                "date filter — each run rescans and rewrites the entire "
+                "date filter - each run rescans and rewrites the entire "
                 "history, and cost grows linearly with table age.",
                 line=_config_line(pr),
                 fix_suggestion=(

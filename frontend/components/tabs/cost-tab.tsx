@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Cost tab — warehouse cost projections rendered with recharts. Shows current vs
+ * Cost tab - warehouse cost projections rendered with recharts. Shows current vs
  * optimized monthly spend, a savings/risk summary, a 30/90/365-day bar chart, and
  * the deterministic reasoning behind the estimate. Reads from useAnalysis().
  */
@@ -207,7 +207,7 @@ export default function CostTab() {
       <Card>
         <CardContent className="py-5">
           <CardTitle className="mb-4 text-xl">
-            Projected spend — current vs optimized
+            Projected spend - current vs optimized
           </CardTitle>
           <ResponsiveContainer width="100%" height={290}>
             <BarChart
@@ -304,7 +304,7 @@ export default function CostTab() {
       {/* Footnote */}
       <Card className="bg-paper3">
         <CardContent className="py-4 text-sm text-inksoft">
-          Estimates use warehouse list prices and IR-derived heuristics —
+          Estimates use warehouse list prices and IR-derived heuristics -
           calibrate with your real query history.
         </CardContent>
       </Card>

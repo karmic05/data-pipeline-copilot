@@ -3,7 +3,7 @@
 ``build_generate_messages`` pairs a senior-data-engineer system prompt with a
 per-request instruction derived from :class:`~app.schemas.agent.GenerateRequest`
 (target framework + SQL dialect). The model is asked to emit ONLY runnable
-pipeline code — no prose, no markdown fences — which
+pipeline code - no prose, no markdown fences - which
 :func:`app.services.generator.generate_pipeline` then strips and format-detects.
 """
 from __future__ import annotations
@@ -25,7 +25,7 @@ GEN_SYSTEM_PROMPT: str = (
     "and explicit dependencies where appropriate).\n"
     "\n"
     "Output ONLY the pipeline code for the requested framework. No prose, no "
-    "explanation, no surrounding markdown code fences — just the raw code, "
+    "explanation, no surrounding markdown code fences - just the raw code, "
     "ready to save to a file and run."
 )
 

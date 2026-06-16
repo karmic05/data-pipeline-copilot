@@ -1,7 +1,7 @@
 /**
  * Sample pipelines shown in the editor's sample picker.
  * CONTRACT: keep the `Sample` shape and the `samples` / `DEFAULT_SAMPLE`
- * exports stable — lib/store.tsx and the editor panel depend on them.
+ * exports stable - lib/store.tsx and the editor panel depend on them.
  *
  * Every sample is deliberately written to exhibit classic, realistic
  * data-engineering anti-patterns so the analyzer has plenty to flag.
@@ -18,7 +18,7 @@ export interface Sample {
 export const samples: Sample[] = [
   {
     id: "snowflake-orders",
-    label: "Snowflake — order enrichment (intentionally bad)",
+    label: "Snowflake - order enrichment (intentionally bad)",
     format: "sql",
     language: "sql",
     code: `-- Daily order enrichment job (Snowflake)
@@ -51,7 +51,7 @@ ORDER BY o.created_at DESC;
   },
   {
     id: "airflow-etl",
-    label: "Airflow — daily ETL DAG (intentionally bad)",
+    label: "Airflow - daily ETL DAG (intentionally bad)",
     format: "airflow",
     language: "python",
     code: `from datetime import datetime, timedelta
@@ -109,7 +109,7 @@ wait_for_drop >> extract >> transform_1 >> transform_2 >> transform_3 >> load
   },
   {
     id: "dbt-incremental",
-    label: "dbt — incremental model + schema.yml (intentionally bad)",
+    label: "dbt - incremental model + schema.yml (intentionally bad)",
     format: "dbt",
     language: "sql",
     code: `{{
@@ -149,7 +149,7 @@ models:
   },
   {
     id: "spark-streaming",
-    label: "Spark — structured streaming job (intentionally bad)",
+    label: "Spark - structured streaming job (intentionally bad)",
     format: "spark",
     language: "python",
     code: `from pyspark.sql import SparkSession
@@ -194,7 +194,7 @@ print("collected", len(sample))
   },
   {
     id: "flink-clicks",
-    label: "Flink SQL — click windowing (intentionally bad)",
+    label: "Flink SQL - click windowing (intentionally bad)",
     format: "flink",
     language: "sql",
     code: `-- Source table with NO WATERMARK -> windows never fire on event time
@@ -235,7 +235,7 @@ ORDER BY window_start;                      -- ORDER BY on an unbounded stream
   },
   {
     id: "tpch-revenue",
-    label: "TPC-H — top-revenue customers (intentionally bad)",
+    label: "TPC-H - top-revenue customers (intentionally bad)",
     format: "sql",
     language: "sql",
     code: `-- TPC-H benchmark: top-revenue customers report.
@@ -270,7 +270,7 @@ ORDER BY revenue DESC;
   },
   {
     id: "nyc-taxi-metrics",
-    label: "NYC TLC trip records — daily taxi metrics (intentionally bad)",
+    label: "NYC TLC trip records - daily taxi metrics (intentionally bad)",
     format: "sql",
     language: "sql",
     code: `-- NYC TLC yellow_tripdata (open data): daily trip metrics.
@@ -296,7 +296,7 @@ ORDER BY gross_revenue DESC;
   },
   {
     id: "github-archive",
-    label: "GH Archive — daily repo-activity rollup, BigQuery (intentionally bad)",
+    label: "GH Archive - daily repo-activity rollup, BigQuery (intentionally bad)",
     format: "sql",
     language: "sql",
     code: `-- GH Archive (githubarchive public dataset, BigQuery): repo-activity rollup.
@@ -322,7 +322,7 @@ ORDER BY events DESC;
   },
   {
     id: "imdb-top-titles",
-    label: "IMDb datasets — top-rated titles join (intentionally bad)",
+    label: "IMDb datasets - top-rated titles join (intentionally bad)",
     format: "sql",
     language: "sql",
     code: `-- IMDb non-commercial datasets (open): top-rated titles join.

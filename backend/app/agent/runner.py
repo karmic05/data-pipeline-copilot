@@ -8,21 +8,21 @@ recorded as an inspectable :class:`~app.schemas.agent.WorkflowStep`.
 
 Steps
 -----
-1. ``analyze``        — deterministic full analysis of the input pipeline. A
+1. ``analyze``        - deterministic full analysis of the input pipeline. A
                         parse error is a HARD failure: the run aborts and the
                         remaining steps are skipped.
-2. ``dynamic_review`` — advisory LLM second pass; *skipped* (not failed) when no
+2. ``dynamic_review`` - advisory LLM second pass; *skipped* (not failed) when no
                         provider is configured or it surfaces nothing.
-3. ``propose_fixes``  — collect the fixable issues (those carrying a
+3. ``propose_fixes``  - collect the fixable issues (those carrying a
                         ``fix_suggestion`` or ``fix_diff``).
-4. ``apply_fixes``    — when enabled AND a provider is available, ask the LLM to
+4. ``apply_fixes``    - when enabled AND a provider is available, ask the LLM to
                         rewrite the source applying the top fixable issues.
-5. ``re_analyze``     — re-run the deterministic analysis on the fixed code
+5. ``re_analyze``     - re-run the deterministic analysis on the fixed code
                         (only when fixed code was produced).
-6. ``measure``        — compute the operational + business KPIs and the summary.
+6. ``measure``        - compute the operational + business KPIs and the summary.
 
-The agent ALWAYS produces a deterministic projected "after" state — even with no
-LLM in the loop — by re-scoring the pipeline with the fixable issues removed and
+The agent ALWAYS produces a deterministic projected "after" state - even with no
+LLM in the loop - by re-scoring the pipeline with the fixable issues removed and
 reading the cost engine's already-computed optimized monthly cost. When a real
 LLM re-analysis exists, its measured numbers are preferred.
 
@@ -244,7 +244,7 @@ async def _run_agent_inner(req: AgentRunRequest, created_at: str) -> AgentRun:
         try:
             final_report, _ = analyze_full(fixed_code, **analysis_kwargs)
         except ParseError as exc:
-            # The LLM produced unparseable code: don't fail the run — fall back
+            # The LLM produced unparseable code: don't fail the run - fall back
             # to the deterministic projection by leaving final_report unset.
             raise SkipStep(f"Re-analysis skipped: fixed code did not parse ({exc.message}).") from exc
         ctx["final_report"] = final_report

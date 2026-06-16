@@ -104,7 +104,7 @@ function EmptyState() {
           ))}
         </ol>
         <p className="mt-8 text-xs text-inksoft">
-          Runs locally — your code never leaves the machine.
+          Runs locally - your code never leaves the machine.
         </p>
       </div>
     </div>

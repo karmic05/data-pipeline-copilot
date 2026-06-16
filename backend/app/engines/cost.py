@@ -5,7 +5,7 @@ engine's findings into real dollar estimates for Snowflake, BigQuery, Redshift
 and Databricks, with transparent step-by-step reasoning.
 
 Unlike a pure heuristic, every dollar here is grounded in
-:mod:`app.engines.pricing` — a module of **real published list prices** (Snowflake
+:mod:`app.engines.pricing` - a module of **real published list prices** (Snowflake
 $3.00/credit Enterprise; BigQuery $6.25/TiB on-demand; Redshift ra3.4xlarge
 $3.26/node-hr; Databricks ~$0.55/DBU blended) and **TPC-H/TPC-DS benchmark-derived
 physical constants** (bytes/row by table width; a credit/throughput calibration
@@ -23,7 +23,7 @@ Model
     optimized path re-prices with cost-driving multipliers removed and the
     ``SELECT *`` width penalty undone, so ``optimized <= current`` always holds.
 
-All public entry points are pure functions of their arguments — deterministic,
+All public entry points are pure functions of their arguments - deterministic,
 monotonic in ``row_count`` and ``daily_runs``, never negative/NaN/inf.
 """
 from __future__ import annotations
@@ -52,7 +52,7 @@ TABLE_SCAN_CAP: int = 16
 MAX_TOTAL_MULTIPLIER: float = 500.0
 #: UNOPTIMIZED_CTE_REUSE compounds per re-scan, capped at this many re-scans.
 MAX_CTE_RESCANS: int = 4
-#: Input clamps — generous, but rule out absurd/overflowing parameters.
+#: Input clamps - generous, but rule out absurd/overflowing parameters.
 ROW_COUNT_CAP: int = 10**13
 DAILY_RUNS_CAP: int = 100_000
 
@@ -84,7 +84,7 @@ RULE_COST_MULTIPLIERS: Dict[str, float] = {
     "CORRELATED_SUBQUERY": 1.8,
     "NESTED_LOOP_RISK": 2.0,
 }
-#: On BigQuery, partition pruning IS the billing model — missing a partition
+#: On BigQuery, partition pruning IS the billing model - missing a partition
 #: filter quadruples the bytes billed rather than merely doubling runtime.
 BIGQUERY_PARTITION_FILTER_MULTIPLIER: float = 4.0
 
@@ -137,7 +137,7 @@ def normalize_warehouse(warehouse: Optional[str]) -> str:
     name = (warehouse or "").strip().lower()
     if name not in SUPPORTED_WAREHOUSES:
         if name:
-            logger.warning("Unknown warehouse %r — falling back to snowflake", warehouse)
+            logger.warning("Unknown warehouse %r - falling back to snowflake", warehouse)
         return "snowflake"
     return name
 
@@ -267,7 +267,7 @@ def price_per_run(warehouse: str, bytes_scanned: float) -> Tuple[float, float, i
     """
     bytes_scanned = max(0.0, _finite(bytes_scanned))
     if bytes_scanned <= 0.0:
-        return 0.0, 0.0, 0, f"{warehouse}: no scannable work detected — $0.00/run."
+        return 0.0, 0.0, 0, f"{warehouse}: no scannable work detected - $0.00/run."
 
     if warehouse == "bigquery":
         usd, billed = pricing.bigquery_cost(bytes_scanned)
@@ -434,12 +434,12 @@ def _build_reasoning(
         monthly_without = _money(per_run_without * daily_runs * 30)
         delta = _money(monthly_current - monthly_without)
         lines.append(
-            f"Highest-ROI fix: resolve {top_rule} first — it alone carries a "
+            f"Highest-ROI fix: resolve {top_rule} first - it alone carries a "
             f"{top_mult:g}x multiplier, worth ~${delta:,.2f}/month."
         )
     else:
         lines.append(
-            "No cost-driving issues detected — this pipeline is already near "
+            "No cost-driving issues detected - this pipeline is already near "
             "its optimal scan cost."
         )
     return lines[:8]

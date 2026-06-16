@@ -35,7 +35,7 @@ interface AnalysisState {
   setParams: (params: AnalysisParams) => void;
   dynamic: boolean;
   setDynamic: (v: boolean) => void;
-  /** Active live DB connection — when set, analyses are grounded in it. */
+  /** Active live DB connection - when set, analyses are grounded in it. */
   connection: ConnectorConfig | null;
   setConnection: (c: ConnectorConfig | null) => void;
   activeTab: TabId;
@@ -70,7 +70,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         if (!cancelled) {
           setProvider({
             provider: "offline",
-            model: "—",
+            model: "-",
             available: false,
             detail: "Backend unreachable at http://localhost:8000",
           });

@@ -3,7 +3,7 @@
 ``parse_kafka`` handles two families of input:
 
 - Python Kafka clients (``kafka-python``, ``confluent_kafka``, ``faust``),
-  analyzed with the stdlib :mod:`ast` module — never imported or executed.
+  analyzed with the stdlib :mod:`ast` module - never imported or executed.
 - Java/Scala Kafka Streams DSL (``StreamsBuilder``/``KStream``), which cannot
   be AST-parsed as Python; per the module contract this one format is scanned
   line-by-line with regular expressions instead.
@@ -290,7 +290,7 @@ def _parse_python_kafka(source: str, module: ast.Module) -> ParseResult:
         app_id: Optional[str] = None
         has_backpressure = False
 
-        # Pass 1 — topic handles: ``orders = app.topic("orders")``.
+        # Pass 1 - topic handles: ``orders = app.topic("orders")``.
         topic_vars: Dict[str, str] = {}
         for node in ast.walk(module):
             if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Call):
@@ -472,7 +472,7 @@ def _parse_python_kafka(source: str, module: ast.Module) -> ParseResult:
 
 
 # ---------------------------------------------------------------------------
-# Java/Scala Kafka Streams DSL (line scanning — contract-sanctioned exception)
+# Java/Scala Kafka Streams DSL (line scanning - contract-sanctioned exception)
 # ---------------------------------------------------------------------------
 
 def _parse_java_streams(source: str, warnings: List[str]) -> ParseResult:

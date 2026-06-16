@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Lineage tab — interactive column-level lineage rendered with @xyflow/react v12.
+ * Lineage tab - interactive column-level lineage rendered with @xyflow/react v12.
  * Builds React Flow nodes/edges from report.lineage with a hand-rolled layered
  * left-to-right layout. Reads the report from useAnalysis().
  */
@@ -397,7 +397,7 @@ function EdgeDetail({
                     {link.to_column}
                   </td>
                   <td className="py-1 font-mono text-[11px] text-inksoft">
-                    {link.transformation || "—"}
+                    {link.transformation || "-"}
                   </td>
                 </tr>
               ))}

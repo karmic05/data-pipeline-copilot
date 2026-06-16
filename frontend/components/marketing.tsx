@@ -140,12 +140,12 @@ export function Hero() {
           <Eyebrow>Data intelligence · not a chatbot</Eyebrow>
           <h1 className="mt-5 font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
             Know what your pipeline <span className="text-terra">costs</span>, what{" "}
-            <span className="text-terra">breaks</span>, and how to <span className="text-sage">fix it</span> — before it ships.
+            <span className="text-terra">breaks</span>, and how to <span className="text-sage">fix it</span> - before it ships.
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-inksoft">
             Paste a SQL query, dbt model, Airflow DAG or Spark job. In seconds, Pipeline Copilot runs{" "}
             <strong className="font-semibold text-ink">85+ deterministic checks</strong> and hands you the dollar cost,
-            the failure blast-radius, the data lineage, and the exact fix — running{" "}
+            the failure blast-radius, the data lineage, and the exact fix - running{" "}
             <strong className="font-semibold text-ink">100% locally</strong>, no warehouse connection, no account.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -212,12 +212,12 @@ function HeroCard() {
   );
 }
 
-/* ── Explore hub (home) — links to the three sub-pages ───────────────────── */
+/* ── Explore hub (home) - links to the three sub-pages ───────────────────── */
 
 const HUB = [
-  { href: "/features", icon: ListChecks, title: "Features", body: "Nine dimensions of analysis from a single paste — issues, cost, lineage, tests, security." },
+  { href: "/features", icon: ListChecks, title: "Features", body: "Nine dimensions of analysis from a single paste - issues, cost, lineage, tests, security." },
   { href: "/how-it-works", icon: Compass, title: "How it works", body: "Paste your pipeline, let 85+ rules and the cost engine run, copy the fix. Three steps." },
-  { href: "/why-different", icon: Zap, title: "Why it's different", body: "Static, deterministic, multi-framework and local — a different shape than everything else." },
+  { href: "/why-different", icon: Zap, title: "Why it's different", body: "Static, deterministic, multi-framework and local - a different shape than everything else." },
 ];
 
 export function ExploreHub() {
@@ -252,15 +252,15 @@ export function ExploreHub() {
 /* ── Features (the 9 dimensions) ─────────────────────────────────────────── */
 
 const FEATURES = [
-  { icon: FileText, title: "Plain-English explanation", body: "Reads your pipeline back to you in plain language — every table, join and transform, with no guesswork." },
-  { icon: Bug, title: "85+ issue rules", body: "A deterministic engine flags cartesian joins, SELECT *, missing partition filters, no-retry DAGs, missing watermarks and 80 more — each tied to an exact line." },
-  { icon: Wrench, title: "Optimization diffs", body: "Every fix arrives as a copy-paste unified diff. Not 'consider refactoring' — the actual corrected code." },
+  { icon: FileText, title: "Plain-English explanation", body: "Reads your pipeline back to you in plain language - every table, join and transform, with no guesswork." },
+  { icon: Bug, title: "85+ issue rules", body: "A deterministic engine flags cartesian joins, SELECT *, missing partition filters, no-retry DAGs, missing watermarks and 80 more - each tied to an exact line." },
+  { icon: Wrench, title: "Optimization diffs", body: "Every fix arrives as a copy-paste unified diff. Not 'consider refactoring' - the actual corrected code." },
   { icon: DollarSign, title: "Warehouse-aware cost", body: "Real dollar math for Snowflake, BigQuery, Redshift and Databricks: cost now, cost fixed, and the 30 / 90 / 365-day projection." },
   { icon: Workflow, title: "Column-level lineage", body: "An interactive graph of how every column flows source-to-output. Export to Mermaid or OpenLineage." },
-  { icon: Gauge, title: "Production readiness score", body: "A 0–100 grade across efficiency, reliability, observability, maintainability and security — with a prioritized fix roadmap." },
+  { icon: Gauge, title: "Production readiness score", body: "A 0-100 grade across efficiency, reliability, observability, maintainability and security - with a prioritized fix roadmap." },
   { icon: Activity, title: "Production Impact Simulator", body: "Dial up the scale and watch each issue's blast radius: added latency, extra $/month, failure probability and incidents per month." },
   { icon: FlaskConical, title: "Auto-generated tests", body: "Ships the data-quality tests you're missing as ready-to-apply dbt schema tests and Great Expectations suites." },
-  { icon: ShieldCheck, title: "PII & security scan", body: "Detects PII columns, hardcoded secrets and unmasked data flowing to outputs — before it becomes a compliance incident." },
+  { icon: ShieldCheck, title: "PII & security scan", body: "Detects PII columns, hardcoded secrets and unmasked data flowing to outputs - before it becomes a compliance incident." },
 ];
 
 export function Features({ withHeading = true }: { withHeading?: boolean }) {
@@ -271,7 +271,7 @@ export function Features({ withHeading = true }: { withHeading?: boolean }) {
           <Eyebrow>Nine kinds of intelligence</Eyebrow>
           <h2 className="mt-4 font-display text-3xl tracking-tight text-ink sm:text-4xl">One paste. Nine dimensions of analysis.</h2>
           <p className="mt-4 text-lg leading-relaxed text-inksoft">
-            Datadog meets dbt Cloud meets an AI code reviewer — but structured, deterministic, and yours.
+            Datadog meets dbt Cloud meets an AI code reviewer - but structured, deterministic, and yours.
           </p>
         </div>
       ) : null}
@@ -303,9 +303,9 @@ export function Determinism() {
           </span>
           <h2 className="mt-4 font-display text-3xl tracking-tight sm:text-4xl">This is not a chatbot.</h2>
           <p className="mt-5 text-lg leading-relaxed text-paper3">
-            The findings come from a deterministic 85-rule engine — the same code always gives the same answer. The
+            The findings come from a deterministic 85-rule engine - the same code always gives the same answer. The
             LLM only ever <em>explains</em> a finding in plain English; it never invents one. And it never sees your
-            raw code — only a structured intermediate representation.
+            raw code - only a structured intermediate representation.
           </p>
           <p className="mt-4 text-lg leading-relaxed text-paper3">
             No hallucinated table names. No made-up problems. No code leaving your machine.
@@ -314,7 +314,7 @@ export function Determinism() {
         <div className="grid gap-4">
           {[
             { k: "Deterministic", v: "Rules are the source of truth. The AI is a narrator, not an oracle." },
-            { k: "Grounded", v: "Every output is tied to a real IR node — an actual line of your pipeline." },
+            { k: "Grounded", v: "Every output is tied to a real IR node - an actual line of your pipeline." },
             { k: "Private", v: "Runs locally. The model sees structured metadata, never your source." },
           ].map((row) => (
             <div key={row.k} className="rounded-2xl border-2 border-paper3/30 bg-paper/5 p-5">
@@ -346,7 +346,7 @@ export function ImpactSpotlight() {
           <h2 className="mt-4 font-display text-3xl tracking-tight text-ink sm:text-4xl">See the blast radius before it pages you.</h2>
           <p className="mt-5 text-lg leading-relaxed text-inksoft">
             The Production Impact Simulator turns every issue into a real-world forecast. Dial the data volume, the
-            run frequency and the warehouse — and watch the latency, the dollars, the failure odds and the on-call
+            run frequency and the warehouse - and watch the latency, the dollars, the failure odds and the on-call
             incidents update live.
           </p>
           <ul className="mt-6 space-y-3">
@@ -396,8 +396,8 @@ export function ImpactSpotlight() {
 /* ── How it works ────────────────────────────────────────────────────────── */
 
 const STEPS = [
-  { n: "01", title: "Paste your pipeline", body: "SQL, a dbt model, an Airflow DAG, a Spark job — we auto-detect the format from the code itself." },
-  { n: "02", title: "We run the math", body: "85+ deterministic rules, warehouse cost modeling, column lineage and blast-radius simulation — in seconds, locally." },
+  { n: "01", title: "Paste your pipeline", body: "SQL, a dbt model, an Airflow DAG, a Spark job - we auto-detect the format from the code itself." },
+  { n: "02", title: "We run the math", body: "85+ deterministic rules, warehouse cost modeling, column lineage and blast-radius simulation - in seconds, locally." },
   { n: "03", title: "Ship the fix", body: "Copy the diff, apply it, watch the score climb. Ask the AI to explain any finding in plain English." },
 ];
 
@@ -428,9 +428,9 @@ export function How({ withHeading = true }: { withHeading?: boolean }) {
 /* ── Why different ───────────────────────────────────────────────────────── */
 
 const DIFFERENT = [
-  { not: "Not a runtime monitor", body: "Monte Carlo, Bigeye and friends watch your data after it breaks. Copilot reads the code before it ever ships — no data required." },
+  { not: "Not a runtime monitor", body: "Monte Carlo, Bigeye and friends watch your data after it breaks. Copilot reads the code before it ever ships - no data required." },
   { not: "Not dbt-only", body: "One tool understands SQL, Airflow, dbt, Spark, Flink and Kafka. Most linters speak a single dialect." },
-  { not: "Not a guessing chatbot", body: "An 85-rule engine is the source of truth. The AI only explains findings — it never invents tables or hallucinates problems." },
+  { not: "Not a guessing chatbot", body: "An 85-rule engine is the source of truth. The AI only explains findings - it never invents tables or hallucinates problems." },
   { not: "Not a cloud SaaS", body: "Runs on your machine. No connector, no data egress, no account. Your code never leaves your laptop." },
 ];
 
@@ -470,7 +470,7 @@ export function Privacy() {
         </span>
         <h2 className="max-w-2xl font-display text-3xl tracking-tight text-ink sm:text-4xl">Your code never leaves your machine.</h2>
         <p className="max-w-xl text-lg leading-relaxed text-inksoft">
-          The parser, the 85-rule engine and all the cost and impact math run locally. AI explanations are optional —
+          The parser, the 85-rule engine and all the cost and impact math run locally. AI explanations are optional -
           point at a local model or a free key, or skip them entirely. Either way, nothing is sent to a third party.
         </p>
       </div>

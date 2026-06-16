@@ -3,7 +3,7 @@
 Every supported input format (SQL, Airflow, dbt, Spark, Prefect/Dagster, Flink,
 Kafka Streams, Great Expectations) is parsed into this single unified schema.
 The rule engine, cost estimator, lineage engine, scorer, impact simulator and
-LLM reasoning layer all consume the IR — never raw source code.
+LLM reasoning layer all consume the IR - never raw source code.
 """
 from __future__ import annotations
 

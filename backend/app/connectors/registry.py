@@ -87,9 +87,9 @@ def list_connectors() -> List[dict]:
         elif not enabled:
             detail = "Disabled here (set ALLOW_LIVE_CONNECTIONS=true to enable)."
         elif requires_creds:
-            detail = "Ready — provide connection credentials."
+            detail = "Ready - provide connection credentials."
         else:
-            detail = "Ready — no credentials needed (in-process demo)."
+            detail = "Ready - no credentials needed (in-process demo)."
         out.append(
             {
                 "kind": kind,

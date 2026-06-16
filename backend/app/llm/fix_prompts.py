@@ -3,14 +3,14 @@
 The agent's ``apply_fixes`` step asks a configured LLM to rewrite a pipeline so
 the highest-impact issues found by the deterministic engine (and the advisory
 dynamic review) are resolved. Unlike the dynamic-review and generator prompts,
-this step DOES receive the raw pipeline source — it must edit the actual code —
+this step DOES receive the raw pipeline source - it must edit the actual code -
 but it only ever returns the corrected code, never prose.
 
 ``build_fix_messages`` pairs a senior-engineer system prompt with a per-request
 instruction that lists the issues to fix (rule id, title, message and the
 engine's own ``fix_suggestion``) and embeds the current source. The model is
 told to output ONLY the full corrected pipeline, no commentary and no markdown
-fences — :func:`app.agent.runner._strip_fences` defensively strips any fences
+fences - :func:`app.agent.runner._strip_fences` defensively strips any fences
 the model adds anyway.
 """
 from __future__ import annotations
@@ -49,7 +49,7 @@ FIX_SYSTEM_PROMPT: str = (
     "- Make the smallest set of edits that fully resolves the listed issues.\n"
     "- The result MUST be syntactically valid, runnable code.\n"
     "- Output ONLY the complete corrected pipeline code. No prose, no "
-    "explanation, no diff, and NO surrounding markdown code fences — just the "
+    "explanation, no diff, and NO surrounding markdown code fences - just the "
     "raw code, ready to save to a file and run."
 )
 
@@ -62,7 +62,7 @@ def _format_issue(index: int, issue: Issue) -> str:
     ]
     location = getattr(issue, "location", None)
     if location is not None and getattr(location, "line", 0):
-        parts[0] += f" — around line {location.line}"
+        parts[0] += f" - around line {location.line}"
     message = (issue.message or "").strip()
     if message:
         parts.append(f"   Problem: {message}")
@@ -125,7 +125,7 @@ def build_fix_messages(
         f"{_format_issues(issues)}\n\n"
         "Current pipeline code:\n"
         f"{_cap_source(code)}\n\n"
-        "Return ONLY the complete corrected pipeline code — no prose, no "
+        "Return ONLY the complete corrected pipeline code - no prose, no "
         "explanation, and no markdown fences."
     )
     return [

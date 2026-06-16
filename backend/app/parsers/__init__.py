@@ -1,6 +1,6 @@
 """Format auto-detection and parse dispatch.
 
-``detect_format`` fingerprints raw source content — the user never selects a
+``detect_format`` fingerprints raw source content - the user never selects a
 pipeline type manually. ``parse`` dispatches to the per-format parser modules,
 each of which returns a :class:`app.schemas.ir.ParseResult`.
 """
@@ -97,7 +97,7 @@ def parse(
     Raises :class:`ParseError` on undetectable or unparseable input.
     """
     if not source or not source.strip():
-        raise ParseError("Empty input — paste pipeline code to analyze.")
+        raise ParseError("Empty input - paste pipeline code to analyze.")
 
     fmt: PipelineFormat
     detected_dialect: Optional[str] = None

@@ -5,7 +5,7 @@ security_rules) define :class:`Rule` subclasses and register them with the
 ``@register`` decorator. ``run_rules(parse_result)`` executes every rule whose
 ``formats`` set includes the IR's format and returns severity-sorted issues.
 
-The rule engine is the source of truth — the LLM only explains and suggests.
+The rule engine is the source of truth - the LLM only explains and suggests.
 """
 from __future__ import annotations
 

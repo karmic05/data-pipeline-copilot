@@ -4,7 +4,7 @@ Wraps a real PostgreSQL-protocol warehouse (vanilla Postgres or Amazon Redshift,
 which speaks the Postgres wire protocol) as a strictly read-only lens: it
 introspects ``information_schema``, estimates row counts from ``pg_class``,
 reads recent cost from ``pg_stat_statements`` (when the extension is present),
-and profiles queries with ``EXPLAIN (FORMAT JSON)`` — it never executes the
+and profiles queries with ``EXPLAIN (FORMAT JSON)`` - it never executes the
 user's query nor any DML/DDL.
 
 The driver (``psycopg`` v3, falling back to ``psycopg2``) is *optional*: it is
@@ -26,7 +26,7 @@ from app.connectors.base import (
     TableSchema,
 )
 
-# Schemas that hold engine internals, never user data — excluded from listing.
+# Schemas that hold engine internals, never user data - excluded from listing.
 _SYSTEM_SCHEMAS = ("pg_catalog", "information_schema")
 
 # Rough bytes-per-row estimate when the plan gives no scanned-bytes signal.
@@ -46,7 +46,7 @@ class PostgresConnector(Connector):
     requires_credentials = True
 
     def __init__(self, config) -> None:
-        # Do NOT connect here — connection is established lazily on first use.
+        # Do NOT connect here - connection is established lazily on first use.
         self._config = config
 
     # ------------------------------------------------------------ driver/conn
@@ -195,7 +195,7 @@ class PostgresConnector(Connector):
         """Read recent executions from ``pg_stat_statements``.
 
         Returns ``[]`` when the driver/extension is unavailable (the common
-        case) — history is best-effort enrichment, never fatal.
+        case) - history is best-effort enrichment, never fatal.
         """
         try:
             conn = self._connect()

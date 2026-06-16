@@ -1,7 +1,7 @@
 """dbt model parser.
 
 Accepts a dbt model file (Jinja-templated SQL) optionally bundled with a
-``schema.yml`` block — either separated by a ``--- schema.yml`` marker line or
+``schema.yml`` block - either separated by a ``--- schema.yml`` marker line or
 appended as a trailing YAML document starting with ``version: 2`` / a top-level
 ``models:`` key.
 
@@ -453,7 +453,7 @@ def parse_dbt(source: str, dialect: Optional[str]) -> ParseResult:
             SQL body nor a parseable schema.yml block.
     """
     if not source or not source.strip():
-        raise ParseError("Empty dbt input — provide a model SQL and/or schema.yml.")
+        raise ParseError("Empty dbt input - provide a model SQL and/or schema.yml.")
 
     sql_text, yaml_text = _split_schema_yaml(source)
     schema_yml, schema_warnings = _load_schema_yml(yaml_text)

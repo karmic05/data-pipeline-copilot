@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Agent tab — the UI for the autonomous pipeline-doctor agent. It runs its own
+ * Agent tab - the UI for the autonomous pipeline-doctor agent. It runs its own
  * durable workflow (analyze → review → propose & apply fixes → re-analyze →
  * measure impact) and reports operational (AgentKPIs) + business (BusinessKPIs)
  * outcomes. Self-contained: reads { code, params } from useAnalysis() and calls
@@ -45,7 +45,7 @@ const fmtInt = (v: number): string =>
 
 /** Render a duration in ms as "{ms} ms" under 1s, else "{s.s}s". */
 function fmtDuration(ms: number | null): string {
-  if (ms == null) return "—";
+  if (ms == null) return "-";
   if (ms < 1000) return `${Math.round(ms)} ms`;
   return `${(ms / 1000).toFixed(1)}s`;
 }
@@ -60,7 +60,7 @@ const ROTATING_STATUS = [
 
 // ── Toning ───────────────────────────────────────────────────────────────────
 
-/** A readiness score (0–100) → design tone for its Meter / stat. */
+/** A readiness score (0-100) → design tone for its Meter / stat. */
 function toneForScore(score: number): MeterTone {
   if (score >= 80) return "sage";
   if (score >= 50) return "ochre";
@@ -254,7 +254,7 @@ function EmptyState({
         </h2>
         <p className="mt-3 leading-relaxed text-inksoft">
           The autonomous agent analyzes your pipeline, reviews it dynamically,
-          proposes &amp; applies fixes, then re-analyzes — reporting the
+          proposes &amp; applies fixes, then re-analyzes - reporting the
           readiness-score lift, the cost it saved, and the incidents it
           prevented.
         </p>

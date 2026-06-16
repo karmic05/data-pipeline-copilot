@@ -19,7 +19,7 @@ import { StreamText } from "@/components/ui/stream-text";
 import { cn } from "@/lib/utils";
 
 const DYNAMIC_TOOLTIP =
-  "Advisory finding from the dynamic LLM reviewer — complements the deterministic rules, not a guaranteed rule hit.";
+  "Advisory finding from the dynamic LLM reviewer - complements the deterministic rules, not a guaranteed rule hit.";
 
 type SeverityFilter = "ALL" | Severity;
 
@@ -340,7 +340,7 @@ export default function IssuesTab() {
       {issues.length === 0 ? (
         <div className="rounded-2xl border-2 border-sage bg-sage/10 p-6 shadow-block">
           <p className="font-display text-2xl text-sage">
-            No issues found — ship it.
+            No issues found - ship it.
           </p>
           <p className="mt-2 leading-relaxed text-inksoft">
             The deterministic rule engine had nothing to flag on this pipeline.

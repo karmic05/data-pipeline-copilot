@@ -1,15 +1,15 @@
-"""Observability engine — auto-generated data tests and coverage gaps.
+"""Observability engine - auto-generated data tests and coverage gaps.
 
 From the IR's tables (write targets and read sources) and their known columns,
 :func:`generate_tests` produces:
 
-- ``dbt_yaml`` — a valid ``version: 2`` dbt ``models:`` schema block with
+- ``dbt_yaml`` - a valid ``version: 2`` dbt ``models:`` schema block with
   per-column ``unique`` / ``not_null`` / ``accepted_values`` /
   ``relationships`` tests,
-- ``great_expectations_json`` — an equivalent Great Expectations suite,
-- ``tests`` — a flat :class:`~app.schemas.report.GeneratedTest` list matching
+- ``great_expectations_json`` - an equivalent Great Expectations suite,
+- ``tests`` - a flat :class:`~app.schemas.report.GeneratedTest` list matching
   both artifacts,
-- ``coverage_gaps`` — human-readable monitoring gaps derived from
+- ``coverage_gaps`` - human-readable monitoring gaps derived from
   observability-category issues plus IR signals (missing SLA, untested
   sources, no freshness checks, no row-count anomaly monitoring).
 
@@ -42,11 +42,11 @@ MAX_COVERAGE_GAPS: int = 12
 #: Maximum number of output tables called out for row-count monitoring.
 MAX_ROWCOUNT_GAP_TABLES: int = 3
 
-#: Placeholder value set emitted for ``accepted_values`` stubs — the engine
+#: Placeholder value set emitted for ``accepted_values`` stubs - the engine
 #: cannot know the valid enum domain, only that one should be enforced.
 ACCEPTED_VALUES_STUB: List[str] = ["<replace with the column's valid values>"]
 
-# Column-name classifiers (regex over names is fine per project conventions —
+# Column-name classifiers (regex over names is fine per project conventions -
 # this is fingerprinting, not SQL parsing).
 _DATE_SUFFIXES: Tuple[str, ...] = ("_at", "_ts", "_time", "_date", "_day")
 _DATE_TOKENS: Tuple[str, ...] = ("date", "timestamp")
@@ -284,10 +284,10 @@ def _build_artifacts(
                     )
                 )
                 tests.append(GeneratedTest(framework="dbt", target=target, name="accepted_values",
-                                           description=f"Enum column '{column}' should be restricted to its valid value set (stub — fill in)."))
+                                           description=f"Enum column '{column}' should be restricted to its valid value set (stub - fill in)."))
                 tests.append(GeneratedTest(framework="great_expectations", target=target,
                                            name="expect_column_values_to_be_in_set",
-                                           description=f"Enum column '{column}' should be restricted to its valid value set (stub — fill in)."))
+                                           description=f"Enum column '{column}' should be restricted to its valid value set (stub - fill in)."))
 
             rel = rel_targets.get((table.name.lower(), lc))
             if rel is not None:
@@ -396,7 +396,7 @@ def _coverage_gaps(pr: ParseResult, issues: List[Issue]) -> List[str]:
         and not ir.scheduling.sla_minutes
     ):
         add(
-            "No SLA configured — late or hung runs will not be detected until "
+            "No SLA configured - late or hung runs will not be detected until "
             "downstream consumers notice missing data."
         )
 
@@ -404,7 +404,7 @@ def _coverage_gaps(pr: ParseResult, issues: List[Issue]) -> List[str]:
     if read_names and "UNTESTED_SOURCE" not in fired and not _has_existing_tests(pr):
         listed = ", ".join(read_names[:5])
         add(
-            f"Upstream source(s) {listed} have no data tests — schema or volume "
+            f"Upstream source(s) {listed} have no data tests - schema or volume "
             "drift upstream will propagate silently into this pipeline."
         )
 
@@ -414,7 +414,7 @@ def _coverage_gaps(pr: ParseResult, issues: List[Issue]) -> List[str]:
         and not _has_freshness_checks(pr)
     ):
         add(
-            "No freshness checks on input sources — stale upstream data will "
+            "No freshness checks on input sources - stale upstream data will "
             "flow downstream undetected."
         )
 
@@ -423,7 +423,7 @@ def _coverage_gaps(pr: ParseResult, issues: List[Issue]) -> List[str]:
         if len([g for g in gaps if "row-count anomaly" in g]) >= MAX_ROWCOUNT_GAP_TABLES:
             break
         add(
-            f"No row-count anomaly monitoring on output table '{name}' — a "
+            f"No row-count anomaly monitoring on output table '{name}' - a "
             "silent upstream drop would publish empty or partial data."
         )
 

@@ -53,7 +53,7 @@ class Connector(abc.ABC):
     """Read-only interface a live warehouse connector must implement (Phase 2).
 
     Implementations MUST be read-only: they introspect metadata, profile queries
-    (EXPLAIN / dry-run — never executing user DML/DDL), and read query history.
+    (EXPLAIN / dry-run - never executing user DML/DDL), and read query history.
     ``warehouse`` identifies the pricing model to apply (snowflake | bigquery |
     redshift | databricks | postgres | duckdb). ``kind`` is the connector id.
     """
@@ -79,7 +79,7 @@ class Connector(abc.ABC):
     ) -> List[QueryStat]:
         """Return recent executions to calibrate cost against real billing.
 
-        Optional — connectors without query-history access return ``[]``.
+        Optional - connectors without query-history access return ``[]``.
         """
         return []
 

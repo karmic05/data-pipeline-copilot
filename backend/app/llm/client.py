@@ -7,8 +7,8 @@ covers them all. Provider selection and credentials come from the environment
 importable, with a direct ``os.environ`` fallback so this module never
 hard-depends on the config module.
 
-The LLM layer only ever receives structured IR/report JSON — never raw source
-code — and degrades gracefully: every connection/auth failure surfaces as
+The LLM layer only ever receives structured IR/report JSON - never raw source
+code - and degrades gracefully: every connection/auth failure surfaces as
 :class:`LLMUnavailable` so callers can fall back to deterministic output.
 """
 from __future__ import annotations
@@ -273,7 +273,7 @@ async def stream_completion(messages: List[dict]) -> AsyncIterator[str]:
     except openai.AuthenticationError as exc:
         logger.warning("LLM auth failure for provider %s: %s", name, exc)
         raise LLMUnavailable(
-            f"Authentication with '{name}' failed — check {cfg.key_env or 'the provider setup'}. "
+            f"Authentication with '{name}' failed - check {cfg.key_env or 'the provider setup'}. "
             f"{cfg.key_help}"
         ) from exc
     except (openai.APIConnectionError, openai.APITimeoutError) as exc:
@@ -284,7 +284,7 @@ async def stream_completion(messages: List[dict]) -> AsyncIterator[str]:
     except openai.RateLimitError as exc:
         logger.warning("LLM rate limit for provider %s: %s", name, exc)
         raise LLMUnavailable(
-            f"Provider '{name}' is rate-limiting requests right now — try again shortly."
+            f"Provider '{name}' is rate-limiting requests right now - try again shortly."
         ) from exc
     except openai.OpenAIError as exc:
         logger.warning("LLM API error for provider %s: %s", name, exc)

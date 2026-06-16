@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Observability tab — surfaces the auto-generated test suite (dbt + Great
+ * Observability tab - surfaces the auto-generated test suite (dbt + Great
  * Expectations), the framework-grouped test chips, and any coverage gaps the
  * engine flagged.
  */
@@ -147,12 +147,12 @@ export default function ObservabilityTab() {
       {/* ── Generated suite source ───────────────────────────────── */}
       <div className="grid gap-4 xl:grid-cols-2">
         <CodeBlock
-          title="schema.yml — dbt tests"
+          title="schema.yml - dbt tests"
           code={dbt_yaml}
           language="yaml"
         />
         <CodeBlock
-          title="expectations.json — Great Expectations"
+          title="expectations.json - Great Expectations"
           code={great_expectations_json}
           language="json"
         />

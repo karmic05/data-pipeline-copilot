@@ -2,7 +2,7 @@
 
 Wraps a live BigQuery project as a strictly read-only lens: it lists datasets +
 tables, introspects table schemas, reads recent billing from
-``INFORMATION_SCHEMA.JOBS_BY_PROJECT``, and — the key feature — profiles queries
+``INFORMATION_SCHEMA.JOBS_BY_PROJECT``, and - the key feature - profiles queries
 with a **dry run**, which returns the EXACT number of bytes BigQuery would bill
 without executing the query at all.
 
@@ -43,7 +43,7 @@ class BigQueryConnector(Connector):
     requires_credentials = True
 
     def __init__(self, config) -> None:
-        # Do NOT connect here — the client is built lazily on first use.
+        # Do NOT connect here - the client is built lazily on first use.
         self._config = config
 
     # ------------------------------------------------------------ driver/conn
@@ -149,7 +149,7 @@ class BigQueryConnector(Connector):
         """Read recent jobs from ``INFORMATION_SCHEMA.JOBS_BY_PROJECT``.
 
         Returns ``[]`` when the driver is unavailable or the region view is not
-        accessible — history is best-effort enrichment, never fatal.
+        accessible - history is best-effort enrichment, never fatal.
         """
         try:
             client = self._client()
@@ -188,7 +188,7 @@ class BigQueryConnector(Connector):
 
     # -------------------------------------------------------------- profile
     def profile_query(self, sql: str) -> QueryStat:
-        """Profile via a BigQuery **dry run** — exact billed bytes, query NOT run.
+        """Profile via a BigQuery **dry run** - exact billed bytes, query NOT run.
 
         ``dry_run=True`` asks BigQuery to validate and price the query without
         executing it; ``use_query_cache=False`` ensures the estimate reflects a

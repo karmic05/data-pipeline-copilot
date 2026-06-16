@@ -205,7 +205,7 @@ export default function ScoreTab() {
           <Card>
             <CardContent>
               <p className="text-inksoft leading-relaxed">
-                Nothing on the roadmap — this pipeline is already in good shape.
+                Nothing on the roadmap - this pipeline is already in good shape.
                 Ship it.
               </p>
             </CardContent>

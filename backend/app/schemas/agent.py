@@ -19,7 +19,7 @@ from app.schemas.report import AnalysisReport, Warehouse
 
 
 class GenerateRequest(BaseModel):
-    """Body of ``POST /api/generate`` — plain-English -> pipeline code."""
+    """Body of ``POST /api/generate`` - plain-English -> pipeline code."""
 
     prompt: str
     target_format: str = "auto"  # auto | sql | dbt | airflow | spark | flink
@@ -106,6 +106,6 @@ class AgentRunRequest(BaseModel):
     daily_runs: int = 24
     warehouse: Warehouse = "snowflake"
     apply_fixes: bool = True
-    #: Optional live DB connection — the agent adds a "ground_with_db" step that
+    #: Optional live DB connection - the agent adds a "ground_with_db" step that
     #: resolves real schemas + real profiled cost before proposing fixes.
     connection: Optional[ConnectorConfig] = None

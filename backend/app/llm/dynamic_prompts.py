@@ -2,12 +2,12 @@
 
 The deterministic 85-rule engine remains the source of truth. This module
 builds the ``[system, user]`` chat messages that ask the LLM to surface a
-handful of ADDITIONAL, genuinely novel findings the fixed rules did not catch —
+handful of ADDITIONAL, genuinely novel findings the fixed rules did not catch -
 semantic / business-logic smells, dialect-specific gotchas, data-correctness
-risks and subtle anti-patterns — grounded strictly in the fields present in the
+risks and subtle anti-patterns - grounded strictly in the fields present in the
 compacted IR.
 
-Like the rest of the LLM layer, the model only ever sees structured IR JSON —
+Like the rest of the LLM layer, the model only ever sees structured IR JSON -
 never raw pipeline source code.
 """
 from __future__ import annotations
@@ -39,19 +39,19 @@ _CATEGORIES = (
 DYNAMIC_SYSTEM_PROMPT: str = (
     "You are a staff data engineer doing a SECOND-PASS review on top of an "
     "automated rule engine that has ALREADY run. You receive ONLY the "
-    "structured intermediate representation (IR) of a pipeline as JSON — never "
-    "the raw source code — plus the list of findings the deterministic rules "
+    "structured intermediate representation (IR) of a pipeline as JSON - never "
+    "the raw source code - plus the list of findings the deterministic rules "
     "already reported.\n"
     "\n"
     "Your job: surface ADDITIONAL, genuinely novel issues the fixed rules did "
-    "NOT catch — semantic or business-logic smells, dialect-specific gotchas, "
+    "NOT catch - semantic or business-logic smells, dialect-specific gotchas, "
     "data-correctness risks, and subtle anti-patterns.\n"
     "\n"
     "Hard rules:\n"
     "- Reference only tables, columns, operations and dialects that appear in "
     "the provided IR JSON. Never invent names or metrics.\n"
     "- Do NOT repeat, rephrase, or overlap with anything in the already-found "
-    "list — only report things it missed.\n"
+    "list - only report things it missed.\n"
     "- Each finding must be grounded in a specific field of the IR. If you are "
     "not confident a problem is really present, leave it out.\n"
     "- Keep each message under 120 words, concrete and actionable.\n"
@@ -82,7 +82,7 @@ def _compact_ir(ir: IR) -> Dict[str, Any]:
 
     Carries tables (name/schema/columns/access), the operation mix with their
     rule-relevant ``details`` and line numbers, dependencies, column lineage,
-    scheduling and materialization — never raw source code.
+    scheduling and materialization - never raw source code.
     """
     return {
         "format": ir.format,
@@ -183,7 +183,7 @@ def build_dynamic_messages(
     )
     user_content = (
         f"{_schema_instruction(max_findings)}\n\n"
-        "Pipeline IR (structured JSON — no source code is available):\n"
+        "Pipeline IR (structured JSON - no source code is available):\n"
         f"```json\n{ir_json}\n```\n\n"
         "Findings the deterministic rule engine ALREADY reported (do NOT "
         "repeat or overlap with these):\n"

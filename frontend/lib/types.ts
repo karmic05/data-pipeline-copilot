@@ -217,7 +217,7 @@ export interface SimulateRequest {
   row_count: number;
   daily_runs: number;
   warehouse: Warehouse;
-  // See ExplainRequest.code — enables stateless re-analysis fallback.
+  // See ExplainRequest.code - enables stateless re-analysis fallback.
   code?: string;
 }
 

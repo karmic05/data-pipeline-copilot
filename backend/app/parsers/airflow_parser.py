@@ -1,6 +1,6 @@
 """Static AST parsers for Airflow DAGs and Prefect/Dagster flows.
 
-Both parsers analyze Python source with the stdlib :mod:`ast` module only —
+Both parsers analyze Python source with the stdlib :mod:`ast` module only -
 user code is never imported, executed or evaluated. They emit the unified IR
 consumed by the deterministic rule engine:
 

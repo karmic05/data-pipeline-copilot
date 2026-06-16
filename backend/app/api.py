@@ -106,7 +106,7 @@ async def security_middleware(request: Request, call_next):
             bucket.popleft()
         if len(bucket) >= settings.rate_limit_per_min:
             return JSONResponse(
-                {"detail": "Rate limit exceeded — slow down and retry shortly."},
+                {"detail": "Rate limit exceeded - slow down and retry shortly."},
                 status_code=429,
                 headers={"Retry-After": "60"},
             )
@@ -128,7 +128,7 @@ _SSE_HEADERS: Dict[str, str] = {
 
 
 class AnalyzeRequest(BaseModel):
-    """Body of ``POST /api/analyze`` — mirrors ``AnalyzeRequest`` in types.ts."""
+    """Body of ``POST /api/analyze`` - mirrors ``AnalyzeRequest`` in types.ts."""
 
     code: str
     format: str = "auto"
@@ -139,17 +139,17 @@ class AnalyzeRequest(BaseModel):
     #: When true (and a provider is available), run the advisory LLM
     #: dynamic-review pass and merge its findings (source="dynamic").
     dynamic: bool = False
-    #: Optional live DB connection — when supplied (and enabled), the report is
+    #: Optional live DB connection - when supplied (and enabled), the report is
     #: grounded in real schemas + real profiled cost (Phase-2 connector bridge).
     connection: Optional[ConnectorConfig] = None
 
 
 class ExplainRequest(BaseModel):
-    """Body of ``POST /api/explain`` — mirrors ``ExplainRequest`` in types.ts.
+    """Body of ``POST /api/explain`` - mirrors ``ExplainRequest`` in types.ts.
 
     ``analysis_id`` uses the in-memory store as a fast path. When the store
     misses (e.g. a serverless worker that never saw the original analysis) and
-    ``code`` is supplied, the report is reconstructed by re-analyzing — this is
+    ``code`` is supplied, the report is reconstructed by re-analyzing - this is
     what makes the backend safe to deploy statelessly. Issue ids are
     deterministic, so a re-analysis resolves ``issue_id`` correctly.
     """
@@ -166,7 +166,7 @@ class ExplainRequest(BaseModel):
 
 
 class SimulateRequest(BaseModel):
-    """Body of simulate/cost endpoints — mirrors ``SimulateRequest`` in types.ts.
+    """Body of simulate/cost endpoints - mirrors ``SimulateRequest`` in types.ts.
 
     Like :class:`ExplainRequest`, this prefers the stored analysis but falls
     back to re-analyzing ``code`` when the store misses, so the simulate/cost
@@ -183,14 +183,14 @@ class SimulateRequest(BaseModel):
 
 
 class SimulateResponse(BaseModel):
-    """Response of ``POST /api/simulate/impact`` — mirrors types.ts."""
+    """Response of ``POST /api/simulate/impact`` - mirrors types.ts."""
 
     impacts: List[ImpactResult]
     cost: CostAnalysis
 
 
 class HealthResponse(BaseModel):
-    """Response of ``GET /api/health`` — mirrors ``HealthResponse`` in types.ts."""
+    """Response of ``GET /api/health`` - mirrors ``HealthResponse`` in types.ts."""
 
     status: str
     provider: ProviderInfo
@@ -526,7 +526,7 @@ async def agent_run_endpoint(req: AgentRunRequest) -> AgentRun:
     Steps (analyze -> dynamic review -> propose fixes -> apply -> re-analyze ->
     measure) are each recorded with timing/retries, and the run reports both
     operational (agent) KPIs and business KPIs (score lift, $ saved, incidents
-    prevented). Never raises — a failed run is returned with ``status="failed"``.
+    prevented). Never raises - a failed run is returned with ``status="failed"``.
     """
     if not req.code or not req.code.strip():
         raise HTTPException(status_code=400, detail="Provide pipeline code for the agent to analyze.")
@@ -556,7 +556,7 @@ def connector_test(req: ConnectorTestRequest) -> ConnectorTestResponse:
         return ConnectorTestResponse(
             ok=True,
             kind=cfg.kind,
-            detail=f"Connected — {len(tables)} table(s) visible.",
+            detail=f"Connected - {len(tables)} table(s) visible.",
             tables=tables,
         )
     except ConnectorUnavailable as exc:
@@ -575,7 +575,7 @@ def connector_test(req: ConnectorTestRequest) -> ConnectorTestResponse:
 
 @app.post("/api/connectors/introspect", response_model=IntrospectResponse)
 def connector_introspect(req: IntrospectRequest) -> IntrospectResponse:
-    """Return real column schemas — one table, or a sample of all tables."""
+    """Return real column schemas - one table, or a sample of all tables."""
     cfg = req.config
     try:
         connector = get_connector(cfg.kind, cfg)

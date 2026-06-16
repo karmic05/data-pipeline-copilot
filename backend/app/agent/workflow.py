@@ -2,7 +2,7 @@
 
 This module is a small but genuinely reusable orchestration primitive. A
 :class:`WorkflowEngine` runs an ordered list of named async steps over a shared
-mutable context dict and produces a fully inspectable execution record — one
+mutable context dict and produces a fully inspectable execution record - one
 :class:`~app.schemas.agent.WorkflowStep` per step, with timing, status, retry
 count and a human-readable detail string. Nothing here is specific to the data
 pipeline agent; any sequence of async stages can be driven by it.
@@ -16,7 +16,7 @@ always fully described by ``engine.steps``: which step ran, how long it took,
 how many attempts it cost, whether it succeeded/failed/was skipped, and why.
 That record is the contract the agent serializes into an ``AgentRun``; a caller
 could persist it after every step and resume/inspect later. The engine itself
-never raises out of :meth:`run` — a failing step is captured, not propagated.
+never raises out of :meth:`run` - a failing step is captured, not propagated.
 
 Core guarantees
 ---------------
@@ -66,7 +66,7 @@ def _now_iso() -> str:
 class SkipStep(Exception):
     """Raised inside a step to mark it ``skipped`` (not failed).
 
-    The optional message becomes the recorded step ``detail`` — e.g. a step that
+    The optional message becomes the recorded step ``detail`` - e.g. a step that
     has no work to do because an upstream feature is disabled.
     """
 
@@ -231,7 +231,7 @@ class WorkflowEngine:
                 record.status = "skipped"
                 record.detail = skip.reason or "Step skipped."
                 return self._finalize(record, start)
-            except Exception as exc:  # a real error — maybe retry
+            except Exception as exc:  # a real error - maybe retry
                 last_error = exc
                 logger.warning(
                     "Workflow %r step %r failed on attempt %d/%d: %s",

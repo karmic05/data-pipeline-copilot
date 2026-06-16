@@ -2,7 +2,7 @@
  * Infinite, theme-tinted logo marquee for the landing page.
  *
  * Real brand marks come from `simple-icons` (single-path silhouettes), so they
- * tint uniformly to the page ink — no neon brand colors. Brands that simple-
+ * tint uniformly to the page ink - no neon brand colors. Brands that simple-
  * icons no longer ships (Redshift, dbt, Dagster, Great Expectations) and the
  * generic "SQL" fall back to matching lucide line icons, so the row stays
  * visually consistent. The seamless scroll is pure CSS (see .marquee in
@@ -73,7 +73,7 @@ export function FormatMarquee() {
   return (
     <section className="border-y-2 border-ink bg-paper2 py-10">
       <p className="px-5 text-center text-xs font-semibold uppercase tracking-widest text-inksoft">
-        Understands your whole stack — auto-detected from the code
+        Understands your whole stack - auto-detected from the code
       </p>
       <div className="marquee group relative mt-8 flex overflow-hidden">
         {/* edge fades for the premium logo-cloud look */}

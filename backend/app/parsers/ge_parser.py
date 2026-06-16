@@ -154,7 +154,7 @@ def parse_great_expectations(source: str) -> ParseResult:
             like an expectation suite.
     """
     if not source or not source.strip():
-        raise ParseError("Empty input — paste a Great Expectations suite to analyze.")
+        raise ParseError("Empty input - paste a Great Expectations suite to analyze.")
 
     suite = _load_suite(source)
     warnings: List[str] = []

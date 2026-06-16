@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ───────────────────────────────────────────────────────────────────────────
-   Data Pipeline Copilot — design tokens
+   Data Pipeline Copilot - design tokens
    Warm earthy editorial paper aesthetic with Memphis accents.
    Snowflake cyan + Redis red adapted onto cream paper tones.
    ─────────────────────────────────────────────────────────────────────────── */
@@ -200,7 +200,7 @@ input[type="range"].copilot-range::-moz-range-track {
 
 /* ── Logo marquee (landing page) ────────────────────────────────────────────
    Two identical tracks sit side by side and both translate -100% of their own
-   width, so the second slides exactly into the first's place — a seamless,
+   width, so the second slides exactly into the first's place - a seamless,
    gap-free loop. Pauses on hover; respects reduced-motion. */
 @keyframes marquee {
   to {

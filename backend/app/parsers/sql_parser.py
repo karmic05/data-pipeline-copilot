@@ -135,7 +135,7 @@ def _normalize_dialect(dialect: Optional[str]) -> Tuple[Optional[str], Optional[
     key = dialect.strip().lower()
     if key in _DIALECT_MAP:
         return _DIALECT_MAP[key], None
-    return None, f"Unknown SQL dialect '{dialect}' — parsed with the generic dialect."
+    return None, f"Unknown SQL dialect '{dialect}' - parsed with the generic dialect."
 
 
 def _meta_loc(node: Optional[exp.Expression]) -> Optional[Tuple[int, int]]:
@@ -761,7 +761,7 @@ class _IRBuilder:
                     {"has_ttl": "table.exec.state.ttl" in self.source.lower()},
                 )
 
-        # WINDOW (OVER ...) — batch SQL only; streaming windows come from
+        # WINDOW (OVER ...) - batch SQL only; streaming windows come from
         # TUMBLE/HOP/SESSION/CUMULATE fingerprints with {kind, size_minutes}.
         if not self.streaming:
             for win in sel.find_all(exp.Window):
@@ -1145,7 +1145,7 @@ def parse_sql(source: str, dialect: Optional[str]) -> ParseResult:
         ParseError: when the SQL cannot be parsed (message + 1-based line).
     """
     if not source or not source.strip():
-        raise ParseError("Empty SQL input — nothing to parse.")
+        raise ParseError("Empty SQL input - nothing to parse.")
 
     read, dialect_warning = _normalize_dialect(dialect)
     try:
@@ -1441,7 +1441,7 @@ def parse_flink(source: str) -> ParseResult:
         ParseError: when no statement could be parsed or fingerprinted.
     """
     if not source or not source.strip():
-        raise ParseError("Empty Flink SQL input — nothing to parse.")
+        raise ParseError("Empty Flink SQL input - nothing to parse.")
 
     ir = IR(format="flink", dialect="flink")
     ir.materialization.type = "stream"
@@ -1497,7 +1497,7 @@ def parse_flink(source: str) -> ParseResult:
 
     if not parsed and not builder._connectors and not builder._tables:
         raise ParseError(
-            "Could not parse Flink SQL input — no recognizable statements found."
+            "Could not parse Flink SQL input - no recognizable statements found."
         )
 
     checkpoint_configured = any(

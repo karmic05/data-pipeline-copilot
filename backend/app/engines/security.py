@@ -2,7 +2,7 @@
 
 ``detect_pii_columns`` fingerprints column names from ``ir.tables`` and
 ``ir.column_lineage`` against tiered PII naming patterns (regex over column
-*names* only — never over SQL structure). ``scan_security`` combines PII
+*names* only - never over SQL structure). ``scan_security`` combines PII
 detection, hardcoded-secret scanning and column-lineage flow analysis into the
 :class:`app.schemas.report.SecurityReport` consumed by the API and frontend.
 
@@ -69,7 +69,7 @@ _PII_SPEC: tuple[tuple[str, float, str, str], ...] = (
     ("credit_card", 0.9, r"credit_card|card_number|card_num|card_no|cc_number|cc_num",
      "Tokenize card numbers through a PCI-compliant vault; display at most the last 4 digits."),
     ("cvv", 0.9, r"cvv2?|cvc",
-     "Drop this column entirely — persisting CVV/CVC values violates PCI DSS."),
+     "Drop this column entirely - persisting CVV/CVC values violates PCI DSS."),
     ("iban", 0.9, r"iban",
      "Tokenize or mask IBANs; expose only the trailing characters."),
     ("tax_id", 0.9, r"tax_id|taxid|tax_identifier|national_id",
@@ -260,7 +260,7 @@ def find_hardcoded_secrets(source: str) -> list[SecretFinding]:
 
     Detects credential-named assignments / option pairs with string-literal
     values, AWS access key IDs (``AKIA…``/``ASIA…``), and connection URLs with
-    embedded passwords. Secret values are never included in the result — only
+    embedded passwords. Secret values are never included in the result - only
     the identifier (variable/option name, key prefix or URL scheme) and the
     1-based line number.
     """
@@ -313,7 +313,7 @@ def scan_security(pr: ParseResult) -> SecurityReport:
     for secret in secrets:
         label = SECRET_KIND_LABELS.get(secret.kind, secret.kind)
         findings.append(
-            f"Hardcoded {label} ('{secret.identifier}') on line {secret.line} — "
+            f"Hardcoded {label} ('{secret.identifier}') on line {secret.line} - "
             "value redacted."
         )
 

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Production Impact Simulator — the signature feature.
+ * Production Impact Simulator - the signature feature.
  *
  * A control deck lets you dial the row count (logarithmic), runs/day, and
  * warehouse. Changes update the shared store params immediately and debounce a
@@ -41,7 +41,7 @@ function round2sig(n: number): number {
   return Math.round(n / factor) * factor;
 }
 
-/** Map a raw 0–100 slider position to a row count on a log scale (1e3..1e9). */
+/** Map a raw 0-100 slider position to a row count on a log scale (1e3..1e9). */
 function rawToRows(raw: number): number {
   return round2sig(10 ** (3 + (raw * 6) / 100));
 }
@@ -261,7 +261,7 @@ export default function ImpactTab() {
               Current monthly cost
             </p>
             <p className="mt-1 font-display text-3xl text-ink">
-              {cost ? usd.format(cost.monthly_usd_current) : "—"}
+              {cost ? usd.format(cost.monthly_usd_current) : "-"}
             </p>
           </CardContent>
         </Card>

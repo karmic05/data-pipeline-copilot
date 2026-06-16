@@ -1,4 +1,4 @@
-"""DYNAMIC advisory review — the LLM layer that ADDS to the rule engine.
+"""DYNAMIC advisory review - the LLM layer that ADDS to the rule engine.
 
 The deterministic 85-rule engine stays the source of truth. :func:`dynamic_review`
 sends the compacted IR plus the list of already-found deterministic findings to
@@ -191,7 +191,7 @@ async def dynamic_review(
     ``source="dynamic"`` :class:`Issue` objects with a confidence score, and
     deduplicated against the deterministic findings.
 
-    Returns ``[]`` when no provider is available or on ANY error — this advisory
+    Returns ``[]`` when no provider is available or on ANY error - this advisory
     layer never raises and never blocks the authoritative deterministic report.
     """
     if max_findings <= 0:

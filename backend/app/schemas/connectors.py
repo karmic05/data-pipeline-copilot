@@ -18,7 +18,7 @@ ConnectorKind = Literal["duckdb", "postgres", "snowflake", "bigquery"]
 class ConnectorConfig(BaseModel):
     """How to reach a database. Only the fields a given kind needs are used.
 
-    The DuckDB "demo" connector needs no credentials and is always safe — it
+    The DuckDB "demo" connector needs no credentials and is always safe - it
     runs an in-process, read-only database over bundled sample data.
     """
 

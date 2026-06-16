@@ -1,4 +1,4 @@
-"""In-process DuckDB connector — the always-works, no-credentials demo.
+"""In-process DuckDB connector - the always-works, no-credentials demo.
 
 DuckDB is an embedded SQL engine (no server, no credentials), which makes it the
 perfect *demo* connector for Data Pipeline Copilot: it proves the whole live-DB
@@ -26,7 +26,7 @@ from app.connectors.base import (
     TableSchema,
 )
 
-# Schemas DuckDB exposes that are not user data — never list/introspect these.
+# Schemas DuckDB exposes that are not user data - never list/introspect these.
 _SYSTEM_SCHEMAS = {"information_schema", "pg_catalog", "main"}
 
 # Leading keywords that indicate a mutating / DDL statement we must never profile.

@@ -203,7 +203,7 @@ class SsnPlaintextRule(Rule):
                 self.issue(
                     f"Government identifier column '{p.table}.{p.column}' "
                     f"({p.pii_type}, confidence {p.confidence:.1f}) is used in "
-                    "plaintext — no hashing, tokenization or masking detected.",
+                    "plaintext - no hashing, tokenization or masking detected.",
                     line=_find_line(pr, p.column),
                     fix_suggestion=p.recommendation,
                 )
@@ -237,7 +237,7 @@ class CreditCardPlaintextRule(Rule):
             issues.append(
                 self.issue(
                     f"Payment data column '{p.table}.{p.column}' ({p.pii_type}, "
-                    f"confidence {p.confidence:.1f}) is processed in plaintext — "
+                    f"confidence {p.confidence:.1f}) is processed in plaintext - "
                     "no tokenization or masking detected.",
                     line=_find_line(pr, p.column),
                     fix_suggestion=p.recommendation,
@@ -262,7 +262,7 @@ class PiiInSelectStarRule(Rule):
     title = "PII swept up by SELECT *"
     description = (
         "SELECT * reads a table containing detected PII columns, propagating "
-        "sensitive data downstream implicitly — including columns added later."
+        "sensitive data downstream implicitly - including columns added later."
     )
 
     def check(self, pr: ParseResult) -> list[Issue]:
@@ -665,9 +665,9 @@ class MissingMaskingHintRule(Rule):
                     "with no apparent mask or hash function applied.",
                     line=_find_line(pr, columns[0]),
                     fix_suggestion=(
-                        "Apply masking at write time — e.g. sha2(email, 256), "
+                        "Apply masking at write time - e.g. sha2(email, 256), "
                         "regexp_replace for partial masking, or a warehouse dynamic "
-                        "masking policy — so raw PII never lands in outputs."
+                        "masking policy - so raw PII never lands in outputs."
                     ),
                 )
             )

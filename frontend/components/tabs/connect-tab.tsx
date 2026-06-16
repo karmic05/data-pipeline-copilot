@@ -1,14 +1,14 @@
 "use client";
 
 /**
- * Connect tab — Phase 2 UI for connecting a live database, testing it, and
+ * Connect tab - Phase 2 UI for connecting a live database, testing it, and
  * browsing real schemas. Self-contained: it talks to the connector API
  * directly and does not depend on the global analysis report, so it renders
  * even before any pipeline has been analyzed.
  *
  * The DuckDB "demo" connector needs no credentials and works instantly. The
  * external connectors (postgres / snowflake / bigquery) may be disabled on the
- * public deployment (gated for safety) — disabled cards are not selectable and
+ * public deployment (gated for safety) - disabled cards are not selectable and
  * surface the gating note.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -322,7 +322,7 @@ function ConfigForm({
   if (kind === "duckdb") {
     return (
       <p className="rounded-2xl border-2 border-line bg-paper3/50 px-4 py-3 text-sm leading-relaxed text-inksoft">
-        In-process demo database — seeded with realistic{" "}
+        In-process demo database - seeded with realistic{" "}
         <span className="font-mono text-ink">raw.*</span> and{" "}
         <span className="font-mono text-ink">analytics.*</span> tables. No
         configuration required.
@@ -486,7 +486,7 @@ export default function ConnectTab() {
           <span className="text-ink">
             BigQuery dry-runs return the exact billed bytes
           </span>{" "}
-          — no estimates. External connections may be disabled on the public
+          - no estimates. External connections may be disabled on the public
           demo for safety, while the in-process{" "}
           <span className="font-mono text-ink">DuckDB</span> demo always works.
         </p>
@@ -599,7 +599,7 @@ export default function ConnectTab() {
                 <>
                   <span className="flex items-center gap-2 font-display text-lg text-frost">
                     <Plug aria-hidden="true" className="h-4 w-4" />
-                    Active — Analyze &amp; the Agent are grounded in this
+                    Active - Analyze &amp; the Agent are grounded in this
                     connection.
                   </span>
                   <Button
