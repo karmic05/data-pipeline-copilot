@@ -37,6 +37,9 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.agent.workflow import FailurePolicy, SkipStep, StepResult, WorkflowEngine
+from app.connectors.base import ConnectorUnavailable
+from app.connectors.enrich import ground_report
+from app.connectors.registry import get_connector
 from app.engines.dynamic import dynamic_review
 from app.engines.scoring import compute_score
 from app.llm.client import LLMUnavailable, get_provider_status, stream_completion
@@ -160,6 +163,24 @@ async def _run_agent_inner(req: AgentRunRequest, created_at: str) -> AgentRun:
         ctx["initial_issue_count"] = len(report.issues)
         return StepResult(detail=f"Parsed and analyzed: {len(report.issues)} issue(s) found.")
 
+    # -- Step 1b: ground_with_db (optional live-connection enrichment) ---------
+    async def step_ground_with_db(ctx: Dict[str, Any]) -> StepResult:
+        if req.connection is None:
+            raise SkipStep("No live database connection provided.")
+        try:
+            connector = get_connector(req.connection.kind, req.connection)
+        except ConnectorUnavailable as exc:
+            raise SkipStep(str(exc)) from exc
+        try:
+            notes = ground_report(ctx["report"], ctx["pr"], connector)
+        finally:
+            try:
+                connector.close()
+            except Exception:  # pragma: no cover - best-effort cleanup
+                pass
+        ctx["grounding_notes"] = notes
+        return StepResult(detail="; ".join(notes)[:240] or "Grounded in live database.")
+
     # -- Step 2: dynamic_review (advisory; skip when nothing/no provider) -----
     async def step_dynamic_review(ctx: Dict[str, Any]) -> StepResult:
         report: AnalysisReport = ctx["report"]
@@ -251,6 +272,7 @@ async def _run_agent_inner(req: AgentRunRequest, created_at: str) -> AgentRun:
         engine
         .add_step("analyze", step_analyze, label="Analyze pipeline",
                   on_failure=FailurePolicy.ABORT)
+        .add_step("ground_with_db", step_ground_with_db, label="Ground in live database")
         .add_step("dynamic_review", step_dynamic_review, label="Advisory review",
                   max_attempts=_LLM_MAX_ATTEMPTS)
         .add_step("propose_fixes", step_propose_fixes, label="Propose fixes")

@@ -17,6 +17,7 @@ import CostTab from "@/components/tabs/cost-tab";
 import ImpactTab from "@/components/tabs/impact-tab";
 import ObservabilityTab from "@/components/tabs/observability-tab";
 import SecurityTab from "@/components/tabs/security-tab";
+import ConnectTab from "@/components/tabs/connect-tab";
 
 const TAB_LABELS: Record<TabId, string> = {
   score: "Score",
@@ -27,6 +28,7 @@ const TAB_LABELS: Record<TabId, string> = {
   impact: "Impact",
   observability: "Observability",
   security: "Security",
+  connect: "Connect",
 };
 
 const TAB_COMPONENTS: Record<TabId, () => React.ReactNode> = {
@@ -38,6 +40,7 @@ const TAB_COMPONENTS: Record<TabId, () => React.ReactNode> = {
   impact: ImpactTab,
   observability: ObservabilityTab,
   security: SecurityTab,
+  connect: ConnectTab,
 };
 
 const LOADER_STEPS = [
@@ -166,9 +169,9 @@ export default function AnalysisPanel() {
   const securityHigh = report?.security.risk_level === "HIGH";
 
   const ActiveTab = TAB_COMPONENTS[activeTab];
-  // The Agent tab runs its own analysis, so it is self-contained and must
-  // render regardless of the global report / loading / error state.
-  const isAgent = activeTab === "agent";
+  // The Agent and Connect tabs run their own flows, so they are self-contained
+  // and must render regardless of the global report / loading / error state.
+  const isSelfContained = activeTab === "agent" || activeTab === "connect";
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -211,7 +214,7 @@ export default function AnalysisPanel() {
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto p-5">
-        {isAgent ? (
+        {isSelfContained ? (
           <ActiveTab />
         ) : (
           <>

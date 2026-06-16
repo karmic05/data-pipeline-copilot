@@ -97,6 +97,14 @@ class Settings:
             self.rate_limit_per_min: int = int(_env("RATE_LIMIT_PER_MIN", "120") or "120")
         except ValueError:
             self.rate_limit_per_min = 120
+        # Phase-2 live DB connectors. The DuckDB demo connector is always
+        # allowed (in-process, read-only, no network). Credential-taking
+        # external connectors (postgres/snowflake/bigquery) are OFF by default
+        # so the public deploy can't be used to reach arbitrary hosts (SSRF);
+        # set ALLOW_LIVE_CONNECTIONS=true on a trusted/self-hosted instance.
+        self.allow_live_connections: bool = _env(
+            "ALLOW_LIVE_CONNECTIONS", "false"
+        ).lower() in ("1", "true", "yes", "on")
 
     def __repr__(self) -> str:  # pragma: no cover - debugging convenience
         return (

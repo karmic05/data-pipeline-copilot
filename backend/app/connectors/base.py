@@ -52,12 +52,15 @@ class QueryStat:
 class Connector(abc.ABC):
     """Read-only interface a live warehouse connector must implement (Phase 2).
 
-    Implementations MUST be read-only: they introspect metadata and query
-    history, never execute user DML/DDL. ``warehouse`` identifies the pricing
-    model to apply (snowflake | bigquery | redshift | databricks | postgres).
+    Implementations MUST be read-only: they introspect metadata, profile queries
+    (EXPLAIN / dry-run — never executing user DML/DDL), and read query history.
+    ``warehouse`` identifies the pricing model to apply (snowflake | bigquery |
+    redshift | databricks | postgres | duckdb). ``kind`` is the connector id.
     """
 
+    kind: str = "generic"
     warehouse: str = "snowflake"
+    requires_credentials: bool = True
 
     @abc.abstractmethod
     def test_connection(self) -> bool:
@@ -71,11 +74,25 @@ class Connector(abc.ABC):
     def get_schema(self, table: str) -> TableSchema:
         """Return the real column schema (resolves ``SELECT *`` / ambiguity)."""
 
-    @abc.abstractmethod
     def query_history(
         self, *, table: Optional[str] = None, limit: int = 200
     ) -> List[QueryStat]:
-        """Return recent executions to calibrate cost against real billing."""
+        """Return recent executions to calibrate cost against real billing.
+
+        Optional — connectors without query-history access return ``[]``.
+        """
+        return []
+
+    def profile_query(self, sql: str) -> QueryStat:
+        """Profile a query WITHOUT running its side effects (EXPLAIN / dry-run).
+
+        Returns real cost signals (bytes scanned, estimated rows, elapsed). The
+        default raises; connectors that support it (DuckDB EXPLAIN, Postgres
+        EXPLAIN, BigQuery dry-run, Snowflake EXPLAIN) override it.
+        """
+        raise ConnectorUnavailable(
+            f"{self.kind!r} connector does not support query profiling"
+        )
 
     def close(self) -> None:  # optional override
         """Release any underlying resources."""

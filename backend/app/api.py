@@ -33,6 +33,18 @@ from pydantic import BaseModel
 from app import store
 from app.agent import run_agent
 from app.config import settings
+from app.connectors.base import ConnectorUnavailable
+from app.connectors.enrich import ground_report
+from app.connectors.registry import get_connector, list_connectors
+from app.schemas.connectors import (
+    ConnectorConfig,
+    ConnectorInfo,
+    ConnectorTestRequest,
+    ConnectorTestResponse,
+    IntrospectRequest,
+    IntrospectResponse,
+    TableSchemaModel,
+)
 from app.engines.cost import estimate_cost
 from app.engines.dynamic import dynamic_review
 from app.engines.impact import attach_impacts
@@ -127,6 +139,9 @@ class AnalyzeRequest(BaseModel):
     #: When true (and a provider is available), run the advisory LLM
     #: dynamic-review pass and merge its findings (source="dynamic").
     dynamic: bool = False
+    #: Optional live DB connection — when supplied (and enabled), the report is
+    #: grounded in real schemas + real profiled cost (Phase-2 connector bridge).
+    connection: Optional[ConnectorConfig] = None
 
 
 class ExplainRequest(BaseModel):
@@ -368,6 +383,22 @@ async def analyze_endpoint(req: AnalyzeRequest) -> AnalysisReport:
         except Exception:  # advisory pass must never fail the analysis
             logger.exception("Dynamic review failed; returning rule findings only")
 
+    if req.connection is not None:
+        try:
+            connector = get_connector(req.connection.kind, req.connection)
+            try:
+                notes = ground_report(report, pr, connector)
+            finally:
+                try:
+                    connector.close()
+                except Exception:  # pragma: no cover - best-effort cleanup
+                    pass
+            report.parser_warnings.extend(f"[live] {n}" for n in notes)
+        except ConnectorUnavailable as exc:
+            report.parser_warnings.append(f"[live] grounding skipped: {exc}")
+        except Exception:  # grounding is best-effort; never fail the analysis
+            logger.exception("Live grounding failed; returning ungrounded report")
+
     store.save(report, pr)
     return report
 
@@ -500,3 +531,73 @@ async def agent_run_endpoint(req: AgentRunRequest) -> AgentRun:
     if not req.code or not req.code.strip():
         raise HTTPException(status_code=400, detail="Provide pipeline code for the agent to analyze.")
     return await run_agent(req)
+
+
+# ── Phase 2: live database connectors ─────────────────────────────────────────
+
+
+@app.get("/api/connectors", response_model=List[ConnectorInfo])
+def connectors_list() -> List[ConnectorInfo]:
+    """List every connector with its availability + gating status."""
+    return [ConnectorInfo(**c) for c in list_connectors()]
+
+
+@app.post("/api/connectors/test", response_model=ConnectorTestResponse)
+def connector_test(req: ConnectorTestRequest) -> ConnectorTestResponse:
+    """Open a read-only connection and report reachability + visible tables."""
+    cfg = req.config
+    try:
+        connector = get_connector(cfg.kind, cfg)
+    except ConnectorUnavailable as exc:
+        return ConnectorTestResponse(ok=False, kind=cfg.kind, detail=str(exc))
+    try:
+        connector.test_connection()
+        tables = connector.list_tables()[:50]
+        return ConnectorTestResponse(
+            ok=True,
+            kind=cfg.kind,
+            detail=f"Connected — {len(tables)} table(s) visible.",
+            tables=tables,
+        )
+    except ConnectorUnavailable as exc:
+        return ConnectorTestResponse(ok=False, kind=cfg.kind, detail=str(exc))
+    except Exception as exc:  # noqa: BLE001 - report any driver error cleanly
+        logger.exception("Connector test failed (%s)", cfg.kind)
+        return ConnectorTestResponse(
+            ok=False, kind=cfg.kind, detail=f"{type(exc).__name__}: {exc}"
+        )
+    finally:
+        try:
+            connector.close()
+        except Exception:  # pragma: no cover
+            pass
+
+
+@app.post("/api/connectors/introspect", response_model=IntrospectResponse)
+def connector_introspect(req: IntrospectRequest) -> IntrospectResponse:
+    """Return real column schemas — one table, or a sample of all tables."""
+    cfg = req.config
+    try:
+        connector = get_connector(cfg.kind, cfg)
+    except ConnectorUnavailable as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    try:
+        if req.table:
+            schemas = [connector.get_schema(req.table)]
+        else:
+            schemas = []
+            for name in connector.list_tables()[:12]:
+                try:
+                    schemas.append(connector.get_schema(name))
+                except Exception:  # noqa: BLE001 - skip tables we can't read
+                    continue
+        return IntrospectResponse(
+            kind=cfg.kind, tables=[TableSchemaModel.of(s) for s in schemas]
+        )
+    except ConnectorUnavailable as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    finally:
+        try:
+            connector.close()
+        except Exception:  # pragma: no cover
+            pass

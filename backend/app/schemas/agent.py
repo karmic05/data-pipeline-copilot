@@ -12,6 +12,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
+from app.schemas.connectors import ConnectorConfig
 from app.schemas.report import AnalysisReport, Warehouse
 
 # ── Text -> pipeline generator ───────────────────────────────────────────────
@@ -105,3 +106,6 @@ class AgentRunRequest(BaseModel):
     daily_runs: int = 24
     warehouse: Warehouse = "snowflake"
     apply_fixes: bool = True
+    #: Optional live DB connection — the agent adds a "ground_with_db" step that
+    #: resolves real schemas + real profiled cost before proposing fixes.
+    connection: Optional[ConnectorConfig] = None

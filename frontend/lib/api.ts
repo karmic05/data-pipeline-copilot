@@ -7,11 +7,15 @@ import type {
   AgentRunRequest,
   AnalysisReport,
   AnalyzeRequest,
+  ConnectorConfig,
+  ConnectorInfo,
+  ConnectorTestResponse,
   CostAnalysis,
   ExplainRequest,
   GenerateRequest,
   GenerateResponse,
   HealthResponse,
+  IntrospectResponse,
   ProviderInfo,
   SimulateRequest,
   SimulateResponse,
@@ -84,6 +88,28 @@ export function getHealth(): Promise<HealthResponse> {
 
 export function getProviders(): Promise<ProviderInfo[]> {
   return get<ProviderInfo[]>("/api/providers");
+}
+
+// ── Phase 2: live database connectors ───────────────────────────────────────
+
+export function getConnectors(): Promise<ConnectorInfo[]> {
+  return get<ConnectorInfo[]>("/api/connectors");
+}
+
+export function testConnector(
+  config: ConnectorConfig,
+): Promise<ConnectorTestResponse> {
+  return post<ConnectorTestResponse>("/api/connectors/test", { config });
+}
+
+export function introspectConnector(
+  config: ConnectorConfig,
+  table?: string,
+): Promise<IntrospectResponse> {
+  return post<IntrospectResponse>("/api/connectors/introspect", {
+    config,
+    table,
+  });
 }
 
 export interface StreamHandlers {

@@ -313,6 +313,61 @@ export interface AgentRunRequest {
   daily_runs?: number;
   warehouse?: Warehouse;
   apply_fixes?: boolean;
+  connection?: ConnectorConfig | null;
+}
+
+// ── Phase 2: live database connectors ───────────────────────────────────────
+
+export type ConnectorKind = "duckdb" | "postgres" | "snowflake" | "bigquery";
+
+export interface ConnectorConfig {
+  kind: ConnectorKind;
+  dsn?: string | null;
+  account?: string | null;
+  user?: string | null;
+  password?: string | null;
+  warehouse?: string | null;
+  database?: string | null;
+  schema_name?: string | null;
+  project?: string | null;
+  options?: Record<string, string>;
+}
+
+export interface ColumnModel {
+  name: string;
+  data_type: string;
+  nullable: boolean;
+  is_partition_key: boolean;
+}
+
+export interface TableSchemaModel {
+  name: string;
+  schema_name: string | null;
+  database: string | null;
+  columns: ColumnModel[];
+  estimated_row_count: number | null;
+  partition_columns: string[];
+}
+
+export interface ConnectorInfo {
+  kind: ConnectorKind;
+  label: string;
+  available: boolean;
+  requires_credentials: boolean;
+  enabled: boolean;
+  detail: string;
+}
+
+export interface ConnectorTestResponse {
+  ok: boolean;
+  kind: string;
+  detail: string;
+  tables: string[];
+}
+
+export interface IntrospectResponse {
+  kind: string;
+  tables: TableSchemaModel[];
 }
 
 export const SEVERITY_ORDER: Record<Severity, number> = {
@@ -330,6 +385,7 @@ export const TAB_IDS = [
   "impact",
   "observability",
   "security",
+  "connect",
 ] as const;
 
 export type TabId = (typeof TAB_IDS)[number];
